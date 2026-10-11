@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SecureTransfer Lab</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="bg-glow"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo"><span></span><span></span><span></span></div>
+    <div>
+      <h1>SecureTransfer <em>Lab</em></h1>
+      <p>TCP file transfer · CRC32 · Hamming(7,4) · HMAC-SHA256 — CNL Group 4</p>
+    </div>
+  </div>
+  <div class="pills">
+    <span class="pill" id="pill-client"><i></i>Client</span>
+    <span class="pill" id="pill-proxy"><i></i>Proxy :8000</span>
+    <span class="pill" id="pill-server"><i></i>Server :9000</span>
+    <span class="pill" id="pill-socket"><i></i>Live</span>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- 3D stage -->
+  <section class="card stage-card">
+    <div id="stage"></div>
+    <div class="node-label" id="lbl-client"><b>CLIENT</b><small>chunks · CRC · HMAC</small></div>
+    <div class="node-label" id="lbl-proxy"><b>CHANNEL</b><small id="lbl-proxy-mode">clean</small></div>
+    <div class="node-label" id="lbl-server"><b>SERVER</b><small>verify · ACK/NACK</small></div>
+    <div class="stage-hud">
+      <span class="badge" id="channel-badge">CHANNEL: CLEAN</span>
+      <span class="badge ghost" id="sec-badge">CRC32 only</span>
+    </div>
+    <div class="verdict" id="verdict">
+      <div class="verdict-icon" id="verdict-icon">✓</div>
+      <div>
+        <h2 id="verdict-title">VERIFIED</h2>
+        <p id="verdict-text"></p>
+        <code id="verdict-hash"></code>
+      </div>
+      <button class="x" id="verdict-close" aria-label="close">×</button>
+    </div>
+  </section>
+
+  <!-- Controls -->
+  <aside class="card controls">
+    <h3>Demo presets</h3>
+    <div class="presets">
+      <button data-preset="clean"><b>1</b>Clean link</button>
+      <button data-preset="noise"><b>2</b>Noisy link</button>
+      <button data-preset="fec"><b>3</b>Noise + Hamming</button>
+      <button data-preset="attack"><b>4</b>MITM attack</button>
+      <button data-preset="hmac"><b>5</b>Attack + HMAC</button>
+    </div>
+
+    <h3>File</h3>
+    <select id="sample"></select>
+    <label class="upload"><input type="file" id="upload"><span id="upload-name">or upload your own file…</span></label>
+    <div class="row2">
+      <label>Chunk size
+        <select id="chunk">
+          <option>256</option><option>512</option><option selected>1024</option><option>2048</option><option>4096</option>
+        </select>
+      </label>
+      <label>Demo speed <output id="delay-out">40 ms</output>
+        <input type="range" id="delay" min="0" max="150" value="40">
+      </label>
+    </div>
+
+    <h3>Protection</h3>
+    <label class="switch"><input type="checkbox" id="fec"><span></span>Hamming(7,4) FEC <small>fix 1-bit errors</small></label>
+    <label class="switch"><input type="checkbox" id="hmac"><span></span>HMAC-SHA256 <small>detect forgery</small></label>
+
+    <h3>Channel (proxy)</h3>
+    <div class="seg" id="mode">
+      <button data-mode="clean" class="on">Clean</button>
+      <button data-mode="noise">Noise</button>
+      <button data-mode="attack">Attack</button>
+    </div>
+    <label>Affected chunks <output id="rate-out">10%</output>
+      <input type="range" id="rate" min="0" max="50" value="10"></label>
+    <label id="bits-wrap">Bits flipped per hit <output id="bits-out">1</output>
+      <input type="range" id="bits" min="1" max="3" value="1"></label>
+    <div class="row2">
+      <label>Latency <output id="lat-out">0 ms</output>
+        <input type="range" id="lat" min="0" max="50" value="0"></label>
+      <label>Frame loss <output id="loss-out">0%</output>
+        <input type="range" id="loss" min="0" max="20" value="0"></label>
+    </div>
+
+    <button class="send" id="send"><span>SEND FILE</span></button>
+  </aside>
+
+  <!-- Stats -->
+  <section class="stats">
+    <div class="tile"><small>Chunks</small><b id="s-chunks">0/0</b><div class="bar"><i id="s-bar"></i></div></div>
+    <div class="tile"><small>Throughput</small><b id="s-tput">0</b><em>KB/s</em></div>
+    <div class="tile"><small>Avg RTT · jitter</small><b id="s-rtt">0</b><em id="s-jit">ms</em></div>
+    <div class="tile warn"><small>Retransmits</small><b id="s-rtx">0</b></div>
+    <div class="tile info"><small>Bits fixed (Hamming)</small><b id="s-fixed">0</b></div>
+    <div class="tile danger"><small>Forged: blocked / slipped</small><b id="s-forge">0 / 0</b></div>
+  </section>
+
+  <!-- Chunk grid -->
+  <section class="card grid-card">
+    <div class="card-head">
+      <h3>Chunk map</h3>
+      <div class="legend">
+        <span class="lg ok">OK</span><span class="lg corrected">Hamming-fixed</span>
+        <span class="lg resent">Retransmitted</span><span class="lg crc">CRC fail</span>
+        <span class="lg hmac">HMAC blocked</span><span class="lg fooled">Forged & accepted</span>
+      </div>
+    </div>
+    <div id="grid" class="grid"></div>
+  </section>
+
+  <!-- Charts -->
+  <section class="card chart-card" id="card-tput"><h3>Throughput (KB/s)</h3><canvas id="c-tput"></canvas></section>
+  <section class="card chart-card" id="card-rtt"><h3>Round-trip time per chunk (ms)</h3><canvas id="c-rtt"></canvas></section>
+
+  <!-- Log -->
+  <section class="card log-card">
+    <div class="card-head"><h3>Event log</h3><button class="ghost-btn" id="clear-log">clear</button></div>
+    <div id="log" class="log"></div>
+  </section>
+</main>
+
+<script src="{{ url_for('static', filename='vendor/socket.io.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/chart.umd.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
