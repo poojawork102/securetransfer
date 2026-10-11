@@ -32,5 +32,6 @@ MAX_RETRIES = 8
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RECEIVED_DIR = os.path.join(BASE_DIR, "received")
+QUARANTINE_DIR = os.path.join(BASE_DIR, "quarantine")
 SAMPLES_DIR = os.path.join(BASE_DIR, "sample_files")
 RESULTS_DIR = os.path.join(BASE_DIR, "results")

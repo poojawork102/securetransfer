@@ -62,28 +62,33 @@ body { min-height: 100vh; overflow-x: hidden; }
 
 /* ---------- layout ---------- */
 .layout {
-  display: grid; gap: 18px; padding: 22px 28px 40px; max-width: 1600px; margin: 0 auto;
-  grid-template-columns: 340px 1fr 1fr;
+  display: grid; gap: 18px; padding: 18px 28px 40px; max-width: 1600px; margin: 0 auto;
+  grid-template-columns: 350px 1fr 1fr;
   grid-template-areas:
-    "ctrl stage stage"
-    "ctrl stats stats"
-    "ctrl grid  grid"
-    "ctrl c1    c2"
-    "ctrl log   log";
+    "ctrl stage   stage"
+    "ctrl status  status"
+    "ctrl stats   stats"
+    "ctrl grid    grid"
+    "ctrl tl      session"
+    "ctrl c1      c2"
+    "ctrl log     log";
 }
 .stage-card { grid-area: stage; }
-.controls { grid-area: ctrl; align-self: start; position: sticky; top: 92px; }
+.controls { grid-area: ctrl; align-self: start; position: sticky; top: 84px; max-height: calc(100vh - 100px); overflow-y: auto; }
+.status { grid-area: status; display: grid; gap: 12px; align-content: start; min-width: 0; }
 .stats { grid-area: stats; }
 .grid-card { grid-area: grid; }
+.timeline-card { grid-area: tl; }
+.session-card { grid-area: session; }
 .log-card { grid-area: log; }
 #card-tput { grid-area: c1; }
 #card-rtt { grid-area: c2; }
 
 @media (max-width: 1100px) {
-  .layout { grid-template-columns: 1fr; padding: 16px;
-    grid-template-areas: "stage" "ctrl" "stats" "grid" "c1" "c2" "log"; }
-  .controls { position: static; }
-  .topbar { padding: 14px 16px; }
+  .layout { grid-template-columns: 1fr; padding: 14px;
+    grid-template-areas: "stage" "status" "ctrl" "stats" "grid" "tl" "session" "c1" "c2" "log"; }
+  .controls { position: static; max-height: none; overflow: visible; }
+  .topbar { padding: 12px 16px; }
 }
 
 .card {
@@ -117,25 +122,31 @@ body { min-height: 100vh; overflow-x: hidden; }
 @keyframes alarm { 50% { box-shadow: 0 0 18px rgba(244, 63, 94, .6); } }
 
 .verdict {
-  position: absolute; left: 50%; bottom: 18px; transform: translate(-50%, 30px) scale(.96); opacity: 0;
-  pointer-events: none; display: flex; gap: 16px; align-items: center; width: min(640px, calc(100% - 32px));
-  padding: 16px 44px 16px 18px; border-radius: 14px; background: rgba(6, 12, 24, .88);
-  border: 1px solid var(--green); box-shadow: 0 0 40px rgba(52, 211, 153, .25); transition: .45s cubic-bezier(.2, .9, .3, 1.2);
+  position: relative; display: none; gap: 16px; align-items: flex-start; padding: 14px 46px 14px 16px; border-radius: 14px;
+  background: rgba(6, 12, 24, .94); border: 1px solid var(--green); box-shadow: 0 0 40px rgba(52, 211, 153, .22);
 }
-.verdict.show { opacity: 1; transform: translate(-50%, 0) scale(1); pointer-events: auto; }
-.verdict h2 { margin: 0 0 3px; font-size: 18px; letter-spacing: 1px; color: var(--green); }
-.verdict p { margin: 0 0 6px; font-size: 13px; color: var(--text); }
-.verdict code { font: 11px var(--mono); color: var(--muted); word-break: break-all; }
-.verdict-icon { flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;
-  font-size: 24px; font-weight: 700; color: #04130d; background: var(--green); box-shadow: 0 0 22px var(--green); }
+.verdict.show { display: flex; animation: slide-in .4s cubic-bezier(.2, .9, .3, 1.1); }
+@keyframes slide-in { from { opacity: 0; transform: translateY(-14px); } }
+.verdict-body { min-width: 0; }
+.verdict h2 { margin: 0 0 3px; font-size: 16px; letter-spacing: .8px; color: var(--green); }
+.verdict p { margin: 0 0 6px; font-size: 13px; color: var(--text); line-height: 1.5; }
+.verdict code { font: 10.5px var(--mono); color: var(--muted); word-break: break-all; display: block; margin-top: 6px; }
+.verdict-icon { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 21px; font-weight: 700; color: #04130d; background: var(--green); box-shadow: 0 0 20px var(--green); }
 .verdict.bad { border-color: var(--red); box-shadow: 0 0 40px rgba(248, 113, 113, .3); }
 .verdict.bad h2 { color: var(--red); }
 .verdict.bad .verdict-icon { background: var(--red); box-shadow: 0 0 22px var(--red); color: #1a0505; }
 .verdict.shield { border-color: var(--purple); box-shadow: 0 0 40px rgba(192, 132, 252, .3); }
 .verdict.shield h2 { color: var(--purple); }
 .verdict.shield .verdict-icon { background: var(--purple); box-shadow: 0 0 22px var(--purple); }
-.verdict .x { position: absolute; top: 8px; right: 10px; background: none; border: 0; color: var(--muted);
+.verdict .x { position: absolute; top: 6px; right: 10px; background: none; border: 0; color: var(--muted);
   font-size: 20px; cursor: pointer; }
+.verdict details { margin: 4px 0 6px; font-size: 12px; }
+.verdict summary { cursor: pointer; color: var(--cyan); }
+.verdict details p { margin-top: 6px; color: var(--muted); }
+.verdict-links { display: flex; gap: 12px; flex-wrap: wrap; }
+.link-btn { background: none; border: 0; color: var(--cyan); cursor: pointer; font: 600 12px var(--sans); padding: 2px 0; text-decoration: underline; text-underline-offset: 3px; }
+.link-btn[hidden] { display: none; }
 
 /* ---------- controls ---------- */
 .controls h3:not(:first-child) { margin-top: 20px; }
@@ -166,9 +177,9 @@ input[type=range] { width: 100%; accent-color: var(--cyan); margin-top: 8px; }
   font-size: 13.5px !important; }
 .switch small { color: var(--muted); margin-left: auto; font-size: 11px; }
 .switch input { display: none; }
-.switch span { width: 38px; height: 21px; border-radius: 999px; background: #1e293b; position: relative; flex: none;
+.switch input + span { width: 38px; height: 21px; border-radius: 999px; background: #1e293b; position: relative; flex: none;
   transition: .25s; border: 1px solid var(--line); }
-.switch span::after { content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%;
+.switch input + span::after { content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%;
   background: #94a3b8; transition: .25s; }
 .switch input:checked + span { background: rgba(34, 211, 238, .3); border-color: var(--cyan); }
 .switch input:checked + span::after { left: 19px; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }

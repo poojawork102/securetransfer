@@ -7,3 +7,6 @@ received/*
 uploads/
 *.pcapng
 .DS_Store
+quarantine/*
+!quarantine/.gitkeep
+received/.incoming/

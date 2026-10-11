@@ -1,0 +1,6 @@
+error_pattern,trials,checksum16_pct,crc32_pct
+1-bit error,20000,100.0,100.0
+2-bit error,20000,97.005,100.0
+3-bit error,20000,99.665,100.0
+burst (2-32 bits),20000,100.0,100.0
+two 16-bit words swapped,20000,0.0,100.0
