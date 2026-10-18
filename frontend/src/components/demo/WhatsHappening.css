@@ -1,0 +1,26 @@
+.happening-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.happening-item {
+  font-size: 0.85rem;
+  color: var(--text);
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.happening-item:last-child {
+  border-bottom: none;
+}
+
+.happening-item.warn { color: var(--amber); }
+.happening-item.fix  { color: var(--blue); }
+
+.happening-count {
+  margin-left: 8px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}

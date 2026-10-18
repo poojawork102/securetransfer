@@ -1,0 +1,90 @@
+.result-card {
+  border-left: 4px solid var(--border);
+}
+
+.result-card.verified { border-left-color: var(--green); }
+.result-card.rejected { border-left-color: var(--red); }
+
+.result-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+}
+
+.verified .result-title { color: var(--green); }
+.rejected .result-title { color: var(--red); }
+
+.result-row {
+  display: flex;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.result-row:last-of-type { border-bottom: none; }
+
+.result-label {
+  min-width: 100px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.result-why {
+  margin-top: 12px;
+}
+
+.result-why summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.result-why p {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* chunk map */
+.chunk-map {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.chunk-map-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.chunk-cell {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.chunk-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.chunk-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.chunk-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}

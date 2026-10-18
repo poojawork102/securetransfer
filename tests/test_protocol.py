@@ -48,12 +48,12 @@ class TestHamming(unittest.TestCase):
         self.assertEqual(fixed, len(enc))
 
     def test_two_bit_error_is_not_silently_trusted(self):
-        # 2 flips in one codeword -> wrong correction, which CRC32 must then catch
+        # 2 flips in one codeword -> wrong correction, which the check must catch
         data = b"A" * 64
         raw = bytearray(P.build_frame(P.DATA, 0, data, use_fec=True))
         raw[P.HEADER_SIZE] ^= 0b0000011
         _, status, _ = P.open_frame(frame_from_bytes(bytes(raw)))
-        self.assertEqual(status, P.CRC_FAIL)
+        self.assertIn(status, P.BAD_STATUSES)
 
 
 class TestFrames(unittest.TestCase):
@@ -65,12 +65,12 @@ class TestFrames(unittest.TestCase):
                 got, status, _ = P.open_frame(fr, KEY)
                 self.assertEqual((got, status, fr.seq), (data, P.OK, 42))
 
-    def test_crc_detects_bit_flip(self):
+    def test_checksum_detects_bit_flip(self):
         data = b"hello world" * 50
         raw = bytearray(P.build_frame(P.DATA, 1, data))
         raw[P.HEADER_SIZE + 10] ^= 0x04
         _, status, _ = P.open_frame(frame_from_bytes(bytes(raw)))
-        self.assertEqual(status, P.CRC_FAIL)
+        self.assertIn(status, P.BAD_STATUSES)
 
     def test_fec_corrects_bit_flip(self):
         data = b"hello world" * 50

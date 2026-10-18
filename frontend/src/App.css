@@ -1,0 +1,119 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0b1220;
+  --bg-card: #111b2e;
+  --bg-input: #182338;
+  --border: #1e3050;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --accent: #22d3ee;
+  --green: #22c55e;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --purple: #a855f7;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "Cascadia Code", "Fira Code", Consolas, monospace;
+}
+
+html {
+  font-size: 16px;
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.tab-content {
+  padding: 24px 0 48px;
+}
+
+code, .mono {
+  font-family: var(--mono);
+  font-size: 0.9em;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+a {
+  color: var(--accent);
+}
+
+/* cards */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+/* status chips */
+.chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.chip.green  { background: rgba(34,197,94,0.15); color: var(--green); }
+.chip.amber  { background: rgba(245,158,11,0.15); color: var(--amber); }
+.chip.red    { background: rgba(239,68,68,0.15); color: var(--red); }
+.chip.blue   { background: rgba(59,130,246,0.15); color: var(--blue); }
+.chip.purple { background: rgba(168,85,247,0.15); color: var(--purple); }
+.chip.cyan   { background: rgba(34,211,238,0.15); color: var(--accent); }
+
+/* utility */
+.muted { color: var(--text-muted); }
+.gap-8  { gap: 8px; }
+.gap-16 { gap: 16px; }
+.gap-24 { gap: 24px; }
+.flex   { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+
+/* responsive */
+@media (max-width: 768px) {
+  .app { padding: 0 12px; }
+  .tab-content { padding: 16px 0 32px; }
+}

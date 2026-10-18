@@ -182,7 +182,7 @@ class TestClosedLoop(ClosedLoopBase):
         s = self.send("clean")
         self.assertTrue(s["verified"])
         self.assertEqual(s["decisions"], [])
-        self.assertEqual(s["final_protection"], {"fec": False, "hmac": False, "check": "crc32", "chunk_size": 1024})
+        self.assertEqual(s["final_protection"], {"fec": False, "hmac": False, "check": "checksum16", "chunk_size": 1024})
         self.assertEqual(s["verdict"], "verified")
 
     def test_noisy_link_enables_hamming_automatically(self):

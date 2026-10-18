@@ -2,9 +2,8 @@
 Numerical Lab engine — solves checksum, CRC and Hamming problems step by step, in 0/1 form,
 exactly the way a textbook answer is written.
 
-Single source of truth: the dashboard only *renders* what this module returns, and the worked
-examples in docs/concepts/*.md are generated from it (docs/build_docs.py). Every result is
-unit-tested against protocol.py / zlib (tests/test_numericals.py), so the "teaching" version and the
+Single source of truth: the dashboard only renders what this module returns. Every result is
+unit-tested against protocol.py / zlib (tests/test_numericals.py), so the teaching version and the
 real protocol can never disagree.
 
 A solution is a plain dict (JSON-friendly):
@@ -245,7 +244,7 @@ def solve_checksum(text, mode="auto", word=8, flips=(), swap=None):
             "segments": [{"name": "data", "start": 0, "end": len(data)},
                          {"name": "checksum", "start": len(data), "end": len(data) + k}],
             "sender": sender, "receiver": receiver, "verdict": verdict, "extra": extra,
-            "doc": "docs/concepts/03_checksum.md", "preset": "Checksum fooled by reordering, CRC catches it"}
+            "preset": "Checksum fooled by reordering, CRC catches it"}
 
 
 # ---------------------------------------------------------------------------
@@ -377,7 +376,7 @@ def solve_crc(text, mode="auto", generator="crc3", flips=()):
             "segments": [{"name": "data", "start": 0, "end": len(bits)},
                          {"name": "CRC", "start": len(bits), "end": len(bits) + r}],
             "sender": sender, "receiver": receiver, "verdict": verdict, "extra": extra,
-            "doc": "docs/concepts/04_crc32.md", "preset": "Noise (CRC catches it → resend)"}
+            "preset": "Noise (CRC catches it, resend)"}
 
 
 def _solve_crc32(bits, text, mode, flips):
@@ -432,7 +431,7 @@ def _solve_crc32(bits, text, mode, flips):
             "sender": sender, "receiver": receiver, "verdict": verdict,
             "extra": {"generator": CRC32_POLY_BITS, "generator_name": "crc32", "crc": crc_bits, "crc_hex": f"0x{real:08x}",
                       "matches_zlib": ref_crc == real, "matches_protocol": proto == real, "padding_bits": pad},
-            "doc": "docs/concepts/04_crc32.md", "preset": "Noise (CRC catches it → resend)"}
+            "preset": "Noise (CRC catches it, resend)"}
 
 
 # ---------------------------------------------------------------------------
@@ -613,7 +612,7 @@ def solve_hamming(text, mode="auto", scheme="74", parity="even", flips=()):
             "data_bits": bits, "transmitted": word, "received": received, "flips": valid_flips,
             "segments": [{"name": ("P" if p in ppos else "D"), "start": p - 1, "end": p} for p in range(1, n + 1)],
             "sender": sender, "receiver": receiver, "verdict": verdict, "extra": extra,
-            "doc": "docs/concepts/05_hamming_code.md", "preset": "Noise + Hamming (self-repair)"}
+            "preset": "Noise + Hamming (self-repair)"}
 
 
 # ---------------------------------------------------------------------------
@@ -669,210 +668,3 @@ def render_text(solution, parts=("sender",)):
                     lines.append(f"  {r['label'].ljust(lw)} {' ' * r['indent']}{r['bits']}{note}".rstrip())
             i = j
     return chr(10).join(lines)
-
-
-# ---------------------------------------------------------------------------
-# Phase 2 — comparison view: the same data and the same damage, judged by every mechanism
-# ---------------------------------------------------------------------------
-HAMMING_DATA_POS = (3, 5, 6, 7)             # where d1..d4 sit inside a Hamming(7,4) codeword
-COMPARE_SCENARIOS = {
-    "none": "No error",
-    "1bit": "Flip 1 bit",
-    "2bit_same": "Flip 2 bits in the same 4-bit block",
-    "2bit_far": "Flip 2 bits far apart",
-    "swap": "Swap two words",
-    "custom": "Your own flips",
-}
-_LESSONS = {
-    "none": "With no error every mechanism accepts the data.",
-    "1bit": "A single flipped bit: checksum and CRC notice and ask for a re-send; Hamming repairs it by itself.",
-    "2bit_same": "Two flips inside one Hamming block: checksum and CRC still notice, but Hamming alone 'corrects' the wrong bit "
-                 "and silently hands over wrong data. Hamming + CRC (our protocol) catches it and asks for a re-send.",
-    "2bit_far": "Two flips in different blocks: Hamming repairs each one separately, while checksum and CRC just ask for a re-send.",
-    "swap": "Two swapped words: the checksum is fooled (the sum is unchanged) and Hamming sees perfectly valid codewords, "
-            "so only CRC notices.",
-    "custom": "Click bits of the data row to build your own error pattern.",
-}
-
-
-def _ocsum(words, k):
-    """Ones'-complement sum of k-bit word strings (end-around carry)."""
-    total = sum(int(w, 2) for w in words)
-    while total >> k:
-        total = (total & ((1 << k) - 1)) + (total >> k)
-    return total
-
-
-def compare(text, mode="auto", scenario="none", flips=(), swap=None):
-    """Judge one damaged data block with: checksum, CRC-8, Hamming(7,4) alone, Hamming + CRC."""
-    bits, mode = parse_bits(text, mode)
-    if len(bits) > 64:
-        raise ValueError("the comparison view takes at most 64 data bits")
-    bits += "0" * (-len(bits) % 8)
-    k = 16 if len(bits) >= 32 else 8
-    bits += "0" * (-len(bits) % k)
-    n = len(bits)
-    words = [bits[i:i + k] for i in range(0, n, k)]
-    if scenario not in COMPARE_SCENARIOS:
-        raise ValueError(f"unknown scenario {scenario!r}")
-
-    if scenario == "1bit":
-        flips = [min(5, n - 1)]
-    elif scenario == "2bit_same":
-        base = 4 if n >= 8 else 0
-        flips = [base, base + 2]
-    elif scenario == "2bit_far":
-        flips = [1, n - 2]
-    elif scenario == "swap":
-        pairs = [(i, j) for i in range(len(words)) for j in range(i + 1, len(words)) if words[i] != words[j]]
-        swap = pairs[0] if pairs else None
-    elif scenario == "none":
-        flips, swap = (), None
-
-    received = bits
-    if swap:
-        i, j = sorted(int(x) for x in swap)
-        if 0 <= i < j < len(words) and words[i] != words[j]:
-            ws = list(words)
-            ws[i], ws[j] = ws[j], ws[i]
-            received = "".join(ws)
-        else:
-            swap = None
-    received, valid_flips = _apply_flips(received, flips if scenario != "swap" else ())
-    changed = received != bits
-    rows = []
-
-    # 1) checksum
-    cs = (~_ocsum(words, k)) & ((1 << k) - 1)
-    rwords = [received[i:i + k] for i in range(0, n, k)]
-    sum_ok = _ocsum(rwords + [f"{cs:0{k}b}"], k) == (1 << k) - 1
-    rows.append({"name": f"{k}-bit checksum", "noticed": not sum_ok,
-                 "status": "ok" if not changed else ("detected" if not sum_ok else "undetected"),
-                 "verdict": "accepted" if sum_ok else "error detected → re-send",
-                 "detail": f"checksum {cs:0{k}b}; the receiver's sum {'is' if sum_ok else 'is not'} all 1s"})
-
-    # 2) CRC-8
-    gen = GENERATORS["crc8"]
-    crc_sent, crc_now = crc_bitwise(bits, gen), crc_bitwise(received, gen)
-    rows.append({"name": "CRC-8", "noticed": crc_sent != crc_now,
-                 "status": "ok" if not changed else ("detected" if crc_sent != crc_now else "undetected"),
-                 "verdict": "accepted" if crc_sent == crc_now else "error detected → re-send",
-                 "detail": f"CRC sent {crc_sent:08b}, recomputed {crc_now:08b} (the protocol uses CRC-32; same outcome here)"})
-
-    # 3) Hamming(7,4) alone
-    def encode(data):
-        return [f"{P.hamming74_encode_nibble(int(data[i:i + 4], 2)):07b}" for i in range(0, len(data), 4)]
-    if swap:
-        wire = encode(received)                              # the swap happens to the data; codewords stay valid
-    else:
-        wire = [list(c) for c in encode(bits)]
-        for f in valid_flips:
-            nib, j = divmod(f, 4)
-            idx = HAMMING_DATA_POS[j] - 1
-            wire[nib][idx] = "1" if wire[nib][idx] == "0" else "0"
-        wire = ["".join(c) for c in wire]
-    decoded, syndromes = "", []
-    for cw in wire:
-        nib, syn = P.hamming74_decode_byte(int(cw, 2))
-        decoded += f"{nib:04b}"
-        syndromes.append(syn)
-    h_noticed, h_ok = any(syndromes), decoded == bits
-    h_status = ("ok" if not changed and h_ok else "corrected" if h_ok and h_noticed
-                else "miscorrected" if h_noticed else "undetected")
-    rows.append({"name": "Hamming(7,4) alone", "noticed": h_noticed, "status": h_status,
-                 "verdict": {"ok": "accepted", "corrected": "error repaired by itself",
-                             "miscorrected": "WRONG correction — wrong data accepted",
-                             "undetected": "accepted — wrong data"}[h_status],
-                 "detail": "syndromes " + " ".join(str(s) for s in syndromes)})
-
-    # 4) Hamming + CRC (the real protocol: decode, then check the CRC of the decoded data)
-    crc_after = crc_bitwise(decoded, gen)
-    if h_ok:
-        c_status = "ok" if not changed else "corrected"
-    else:
-        c_status = "detected" if crc_after != crc_sent else "undetected"
-    rows.append({"name": "Hamming + CRC (our protocol)", "noticed": h_noticed or crc_after != crc_sent,
-                 "status": c_status,
-                 "verdict": {"ok": "accepted", "corrected": "error repaired by itself",
-                             "detected": "Hamming could not fix it → CRC caught it → re-send",
-                             "undetected": "accepted — wrong data"}[c_status],
-                 "detail": f"CRC of the decoded data {crc_after:08b} vs sent {crc_sent:08b}"})
-
-    for r in rows:
-        r["safe"] = r["status"] in ("ok", "corrected", "detected")     # right data or a re-send, never silently wrong data
-    return {"data_bits": bits, "received_bits": received, "flips": valid_flips, "swap": list(swap) if swap else None,
-            "scenario": scenario, "scenario_name": COMPARE_SCENARIOS[scenario], "word": k, "changed": changed,
-            "rows": rows, "lesson": _LESSONS[scenario], "scenarios": COMPARE_SCENARIOS}
-
-
-# ---------------------------------------------------------------------------
-# Phase 2 — practice mode: random exam-style questions, checked against the same solver
-# ---------------------------------------------------------------------------
-PRACTICE_KINDS = {
-    "checksum": "Internet checksum",
-    "crc": "CRC remainder",
-    "hamming_encode": "Hamming codeword",
-    "hamming_locate": "Hamming: which bit is wrong?",
-    "accept_reject": "CRC: accept or reject?",
-}
-
-
-def practice_question(kind="checksum", seed=None):
-    rng = random.Random(seed)
-    rb = lambda n: "".join(rng.choice("01") for _ in range(n))                      # noqa: E731
-    if kind == "checksum":
-        words = [rb(8) for _ in range(rng.randint(2, 3))]
-        return {"kind": kind, "params": {"input": " ".join(words), "mode": "bin", "word": 8}, "flips": [],
-                "prompt": f"Find the 8-bit Internet checksum of the words  {'  '.join(words)}.", "format": "8 binary digits"}
-    if kind == "crc":
-        g = rng.choice(["crc3", "crc4"])
-        data = rb(rng.randint(8, 12))
-        return {"kind": kind, "params": {"input": data, "mode": "bin", "generator": g}, "flips": [],
-                "prompt": f"Compute the CRC of the data {data} with generator {GENERATORS[g]} ({poly_str(GENERATORS[g])}).",
-                "format": f"{len(GENERATORS[g]) - 1} binary digits"}
-    if kind == "hamming_encode":
-        data = rb(4)
-        return {"kind": kind, "params": {"input": data, "mode": "bin", "scheme": "74", "parity": "even"}, "flips": [],
-                "prompt": f"Hamming(7,4), even parity: encode the data bits d1 d2 d3 d4 = {data}. "
-                          "Give the 7-bit codeword for positions 1–7.", "format": "7 binary digits"}
-    if kind == "hamming_locate":
-        params = {"input": rb(4), "mode": "bin", "scheme": "74", "parity": "even"}
-        flip = rng.randrange(7)
-        received = solve("hamming", **params, flips=[flip])["received"]
-        return {"kind": kind, "params": params, "flips": [flip],
-                "prompt": f"A Hamming(7,4) codeword (even parity) arrives as {received}. Exactly one bit is wrong. "
-                          "Which position (1–7) is it?", "format": "a number 1–7"}
-    if kind == "accept_reject":
-        g = rng.choice(["crc3", "crc4"])
-        params = {"input": rb(rng.randint(8, 12)), "mode": "bin", "generator": g}
-        flips = [rng.randrange(len(params["input"]) + len(GENERATORS[g]) - 1)] if rng.random() < 0.5 else []
-        received = solve("crc", **params, flips=flips)["received"]
-        return {"kind": kind, "params": params, "flips": flips,
-                "prompt": f"Generator {GENERATORS[g]}. The receiver gets the codeword {received}. "
-                          "Divide it by the generator: accept or reject?", "format": "accept or reject"}
-    raise ValueError(f"unknown question type {kind!r}")
-
-
-def practice_check(question, answer):
-    kind, params, flips = question["kind"], question["params"], question.get("flips", [])
-    if kind == "checksum":
-        sol = solve("checksum", **params)
-        expected = sol["extra"]["checksum"]
-    elif kind == "crc":
-        sol = solve("crc", **params)
-        expected = sol["extra"]["crc"]
-    elif kind == "hamming_encode":
-        sol = solve("hamming", **params)
-        expected = sol["transmitted"]
-    elif kind == "hamming_locate":
-        sol = solve("hamming", **params, flips=flips)
-        expected = str(sol["extra"]["syndrome"])
-    elif kind == "accept_reject":
-        sol = solve("crc", **params, flips=flips)
-        expected = "accept" if sol["verdict"]["status"] in ("accept", "undetected") else "reject"
-    else:
-        raise ValueError(f"unknown question type {kind!r}")
-    given = re.sub(r"[\s_]", "", str(answer)).lower()
-    if kind == "accept_reject":
-        given = {"a": "accept", "accept": "accept", "r": "reject", "reject": "reject"}.get(given, given)
-    return {"correct": given == expected, "expected": expected, "kind": kind, "solution": sol}

@@ -1,0 +1,45 @@
+.stage3d {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.stage3d canvas {
+  display: block;
+  border-radius: 8px;
+}
+
+.stage-labels {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 32px;
+  pointer-events: none;
+}
+
+.stage-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.stage-idle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+@media (max-width: 768px) {
+  .stage3d { height: 160px; }
+  .stage-labels { padding: 0 16px; }
+}

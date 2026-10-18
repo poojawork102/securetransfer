@@ -1,7 +1,7 @@
 # Viva notes — likely questions
 
 **Why add a checksum if TCP already has one?**
-TCP's checksum is a 16-bit ones'-complement sum. It's weak (misses swapped 16-bit words, some multi-bit errors) and only covers the transport segment. Data can still be corrupted in buffers, storage or middleboxes. CRC32 + an end-to-end SHA-256 gives much stronger, application-level assurance.
+TCP's checksum is a 16-bit ones-complement sum. It is weak (misses swapped 16-bit words, some multi-bit errors) and only covers the transport segment. Data can still be corrupted in buffers, storage or middleboxes. Our application-level 16-bit Internet checksum (same algorithm but computed over the chunk payload) plus an end-to-end SHA-256 gives stronger assurance. CRC32 is even better at detecting errors and is available as a comparison.
 
 **Why do we need a proxy at all?**
 On localhost TCP never corrupts anything, so without a fault injector our checks would never fire. The proxy simulates a noisy channel, packet loss, latency and an attacker.
@@ -37,9 +37,7 @@ Sliding window, key exchange instead of a pre-shared key, encryption, resumable 
 
 ---
 
-## Added in v2 — Auto Defense, quarantine, checksum mode, Numerical Lab
-
-(Each concept note in `docs/concepts/` ends with its own three viva questions; these are the cross-cutting ones.)
+## Auto Defense, quarantine, checksum mode, Numerical Lab
 
 **What does "closed loop" mean in your project?**
 The client monitors the last 20 transmissions, `adaptive.py` decides by fixed rules (Hamming on at ≥ 10 % check failures, smaller chunks if bursts beat Hamming, Hamming off after 30 clean transmissions, alert on any HMAC failure, give up after 8 failures on one chunk), the client acts, and the server's SHA-256 verifies the result — a mismatch quarantines the file and re-sends it with HMAC.
@@ -48,7 +46,7 @@ The client monitors the last 20 transmissions, `adaptive.py` decides by fixed ru
 No. Data is staged in `received/.incoming/` and moved to `received/` only after the whole-file SHA-256 matches. Mismatches and dropped connections go to `quarantine/` with a JSON sidecar.
 
 **Why is the 16-bit checksum in the project if CRC32 is better?**
-The brief names "checksum / Hamming". The checksum is the classic Internet checksum; having both lets us demonstrate its weakness: swapping two 16-bit words leaves the sum unchanged, so the checksum is fooled and CRC32 catches it (preset 6, tests C14–C18).
+The brief names "checksum / Hamming". The checksum is the classic Internet checksum and is our default. Having both lets us demonstrate its weakness: swapping two 16-bit words leaves the sum unchanged, so the checksum is fooled and CRC32 catches it (Objective 4, tests C14-C18).
 
 **Does Auto Defense stop the CRC-forging attacker by itself?**
 Not before the end of the file: CRC-fooled chunks look perfect. The end-to-end SHA-256 catches it, the file is quarantined and Auto Defense re-sends with HMAC. If HMAC is on from the start, the first forged chunk raises an intrusion alert.
@@ -57,7 +55,7 @@ Not before the end of the file: CRC-fooled chunks look perfect. The end-to-end S
 Only if the expected hash is trustworthy. It travels in the META frame, so an attacker who also rewrites META could make a tampered file match; with HMAC on, META is authenticated too.
 
 **How do you know the Numerical Lab's answers are right?**
-`numericals.py` is the only place the solutions are computed, and `tests/test_numericals.py` checks them against `protocol.py` and `zlib` (e.g. CRC-32 by long division equals `zlib.crc32`, CRC-8 of `123456789` is `0xF4`, Hamming codewords equal `hamming74_encode_nibble`). The concept notes are generated from the same functions.
+`numericals.py` is the only place the solutions are computed, and `tests/test_numericals.py` checks them against `protocol.py` and `zlib` (e.g. CRC-32 by long division equals `zlib.crc32`, CRC-8 of `123456789` is `0xF4`, Hamming codewords equal `hamming74_encode_nibble`).
 
 **Why can the chunk size change mid-transfer?**
 SEQ is a counter, not a file offset, and the server appends accepted chunks in order. A new size only applies from the next chunk, never to a retry (a delayed ACK could otherwise make us skip bytes).

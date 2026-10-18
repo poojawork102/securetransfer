@@ -1,0 +1,59 @@
+.beyond-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.beyond-notice {
+  border-left: 3px solid var(--amber);
+}
+
+.beyond-notice p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.beyond-demos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.beyond-demo-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn-beyond {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  min-height: 40px;
+  min-width: 200px;
+  transition: border-color 0.15s;
+}
+
+.btn-beyond:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.btn-beyond:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.limitations-list {
+  padding-left: 20px;
+  font-size: 0.85rem;
+  line-height: 1.8;
+  color: var(--text);
+}
+
+.limitations-list li {
+  margin-bottom: 4px;
+}

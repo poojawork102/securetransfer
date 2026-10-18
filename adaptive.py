@@ -12,7 +12,7 @@ An event is a pair (seq, status) with status one of:
     HMAC_FAIL   CRC passed but HMAC failed -> NACK                (forgery!)
     TIMEOUT     no reply (frame lost)
 
-Rules (first match wins, see the table in README / docs/concepts/08_closed_loop_auto_defense.md):
+Rules (first match wins):
     give_up         same chunk failed N times in a row                -> stop, quarantine partial file
     intrusion_alert any HMAC failure                                  -> alert, channel compromised
     fec_on          >=10 % check failures in the window, FEC off      -> enable Hamming

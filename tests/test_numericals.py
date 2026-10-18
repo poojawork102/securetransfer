@@ -5,7 +5,6 @@ protocol.py / zlib, and the textbook examples are checked against their known an
 import itertools
 import os
 import random
-import socket
 import sys
 import unittest
 import zlib
@@ -213,113 +212,6 @@ class TestInputsAndExamples(unittest.TestCase):
         text = N.render_text(N.solve("hamming", input="1011", mode="bin"))
         self.assertIn("0110011", text)
         self.assertIn("P2 ⊕ 1 ⊕ 1 ⊕ 1 = 0  →  P2 = 1", text)
-
-
-class TestCompare(unittest.TestCase):
-    DATA = "0xCAFE1234"
-
-    def rows(self, scenario, **kw):
-        c = N.compare(self.DATA, scenario=scenario, **kw)
-        return c, {r["name"]: r for r in c["rows"]}
-
-    def test_no_error_everyone_accepts(self):
-        c, r = self.rows("none")
-        self.assertFalse(c["changed"])
-        self.assertTrue(all(x["status"] == "ok" and x["safe"] for x in r.values()))
-
-    def test_one_bit_detected_by_checksum_and_crc_repaired_by_hamming(self):
-        _, r = self.rows("1bit")
-        self.assertEqual(r["16-bit checksum"]["status"], "detected")
-        self.assertEqual(r["CRC-8"]["status"], "detected")
-        self.assertEqual(r["Hamming(7,4) alone"]["status"], "corrected")
-        self.assertEqual(r["Hamming + CRC (our protocol)"]["status"], "corrected")
-
-    def test_two_bits_same_block_fool_hamming_alone_but_not_hamming_plus_crc(self):
-        _, r = self.rows("2bit_same")
-        self.assertEqual(r["Hamming(7,4) alone"]["status"], "miscorrected")
-        self.assertFalse(r["Hamming(7,4) alone"]["safe"])
-        self.assertEqual(r["Hamming + CRC (our protocol)"]["status"], "detected")
-        self.assertEqual(r["16-bit checksum"]["status"], "detected")
-
-    def test_two_bits_far_apart_are_both_repaired(self):
-        _, r = self.rows("2bit_far")
-        self.assertEqual(r["Hamming(7,4) alone"]["status"], "corrected")
-        self.assertEqual(r["CRC-8"]["status"], "detected")
-
-    def test_word_swap_fools_checksum_and_hamming_but_not_crc(self):
-        c, r = self.rows("swap")
-        self.assertIsNotNone(c["swap"])
-        self.assertEqual(r["16-bit checksum"]["status"], "undetected")
-        self.assertEqual(r["Hamming(7,4) alone"]["status"], "undetected")
-        self.assertEqual(r["CRC-8"]["status"], "detected")
-        self.assertEqual(r["Hamming + CRC (our protocol)"]["status"], "detected")
-
-    def test_custom_flips_are_applied(self):
-        c, r = self.rows("custom", flips=[0, 9])
-        self.assertEqual(c["flips"], [0, 9])
-        self.assertNotEqual(c["data_bits"], c["received_bits"])
-        self.assertEqual(r["Hamming(7,4) alone"]["status"], "corrected")
-
-    def test_hamming_plus_crc_agrees_with_the_real_frame_pipeline(self):
-        rng = random.Random(8)
-        for scenario in ("1bit", "2bit_same", "2bit_far"):
-            for _ in range(10):
-                data = rng.randbytes(4)
-                c = N.compare("0x" + data.hex(), scenario=scenario)
-                raw = bytearray(P.build_frame(P.DATA, 0, data, use_fec=True))
-                for f in c["flips"]:                          # same damage on the real wire format
-                    nib, j = divmod(f, 4)
-                    raw[P.HEADER_SIZE + nib] ^= 1 << (7 - N.HAMMING_DATA_POS[j])
-                a, b = socket.socketpair()
-                a.sendall(bytes(raw))
-                frame = P.read_frame(b)
-                a.close(); b.close()
-                got, status, _ = P.open_frame(frame)
-                row = next(x for x in c["rows"] if x["name"] == "Hamming + CRC (our protocol)")
-                expected = {"corrected": P.CORRECTED, "detected": P.CRC_FAIL, "ok": P.OK}[row["status"]]
-                self.assertEqual(status, expected, (scenario, data.hex()))
-                alone = next(x for x in c["rows"] if x["name"] == "Hamming(7,4) alone")
-                self.assertEqual(N.bytes_to_bits(got) == c["data_bits"], alone["status"] in ("ok", "corrected"))
-
-    def test_bad_input(self):
-        with self.assertRaises(ValueError):
-            N.compare("1" * 70, mode="bin")
-        with self.assertRaises(ValueError):
-            N.compare("1011", scenario="nope")
-
-
-class TestPractice(unittest.TestCase):
-    def test_every_question_type_is_answerable_and_checked(self):
-        for kind in N.PRACTICE_KINDS:
-            for seed in range(30):
-                q = N.practice_question(kind, seed)
-                right = N.practice_check(q, "?")["expected"]
-                self.assertTrue(N.practice_check(q, right)["correct"], (kind, seed))
-                wrong = "reject" if right == "accept" else "accept" if kind == "accept_reject" else "x" + right
-                self.assertFalse(N.practice_check(q, wrong)["correct"], (kind, seed))
-                self.assertTrue(q["prompt"] and q["format"])
-
-    def test_answer_normalisation(self):
-        q = N.practice_question("crc", 1)
-        expected = N.practice_check(q, "")["expected"]
-        spaced = " ".join(expected)
-        self.assertTrue(N.practice_check(q, spaced)["correct"])
-        q = N.practice_question("accept_reject", 2)
-        exp = N.practice_check(q, "")["expected"]
-        self.assertTrue(N.practice_check(q, exp[0].upper())["correct"])
-
-    def test_hamming_locate_answer_is_the_flipped_position(self):
-        for seed in range(20):
-            q = N.practice_question("hamming_locate", seed)
-            self.assertEqual(N.practice_check(q, "")["expected"], str(q["flips"][0] + 1))
-
-    def test_questions_are_reproducible_by_seed(self):
-        self.assertEqual(N.practice_question("checksum", 5), N.practice_question("checksum", 5))
-        self.assertNotEqual(N.practice_question("checksum", 5), N.practice_question("checksum", 6))
-
-    def test_unknown_kind(self):
-        with self.assertRaises(ValueError):
-            N.practice_question("nope")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,72 @@
+.stepper-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stepper-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 10px;
+  border-radius: 6px;
+  transition: background 0.15s;
+  min-height: 44px;
+}
+
+.stepper-btn:hover:not(:disabled) {
+  background: var(--bg-input);
+}
+
+.stepper-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.stepper-item.active .stepper-btn {
+  background: var(--bg-input);
+  border: 1px solid var(--accent);
+}
+
+.stepper-status {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepper-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.stepper-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stepper-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.stepper-detail {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}

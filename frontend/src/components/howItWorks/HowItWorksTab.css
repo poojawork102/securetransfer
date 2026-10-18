@@ -1,0 +1,56 @@
+.howitworks {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.diagram-container {
+  overflow-x: auto;
+  padding: 8px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.arch-svg,
+.frame-svg,
+.seq-svg {
+  width: 100%;
+  height: auto;
+}
+
+.seq-svg {
+  max-width: 700px;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.comparison-table th {
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.comparison-table td:first-child {
+  font-weight: 500;
+  font-family: var(--mono);
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .comparison-table { font-size: 0.8rem; }
+  .comparison-table th,
+  .comparison-table td { padding: 8px 10px; }
+}

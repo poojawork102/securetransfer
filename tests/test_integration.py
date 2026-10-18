@@ -61,8 +61,9 @@ class TestTransfer(unittest.TestCase):
     def test_10_noise_detected_and_retransmitted(self):
         s = self.send("noise", rate=0.3)
         self.assertTrue(s["verified"])
-        self.assertGreater(s["server_stats"]["crc_fail"], 0)
-        self.assertEqual(s["retransmits"], s["server_stats"]["crc_fail"])
+        check_fails = s["server_stats"].get("crc_fail", 0) + s["server_stats"].get("checksum_fail", 0)
+        self.assertGreater(check_fails, 0)
+        self.assertEqual(s["retransmits"], check_fails)
 
     def test_11_hamming_corrects_without_retransmit(self):
         s = self.send("noise", rate=0.3, bits=1, use_fec=True)
@@ -73,7 +74,8 @@ class TestTransfer(unittest.TestCase):
     def test_12_hamming_burst_falls_back_to_retransmit(self):
         s = self.send("noise", rate=0.3, bits=3, use_fec=True)
         self.assertTrue(s["verified"])
-        self.assertGreater(s["server_stats"]["crc_fail"], 0)
+        check_fails = s["server_stats"].get("crc_fail", 0) + s["server_stats"].get("checksum_fail", 0)
+        self.assertGreater(check_fails, 0)
 
     # ---- attack
     def test_20_attack_fools_crc(self):

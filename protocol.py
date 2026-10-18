@@ -196,7 +196,7 @@ def pack_header(ftype, flags, seq, length, crc, version=VERSION) -> bytes:
 
 
 def build_frame(ftype: int, seq: int, data: bytes = b"", *, use_hmac=False, use_fec=False,
-                key: bytes = b"", check: str = "crc32") -> bytes:
+                key: bytes = b"", check: str = "checksum16") -> bytes:
     if check not in CHECK_MODES:
         raise ValueError(f"unknown check mode {check!r}")
     flags = ((FLAG_HMAC if use_hmac else 0) | (FLAG_FEC if use_fec else 0)

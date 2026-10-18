@@ -193,7 +193,7 @@ def _run_attempt(*, blob, name, sha, host, port, settings, check, key, delay_ms,
 def send_file(path, host=config.HOST, port=config.PROXY_PORT, *, chunk_size=config.DEFAULT_CHUNK_SIZE,
               use_hmac=False, use_fec=False, key=config.SHARED_KEY, delay_ms=0,
               max_retries=config.MAX_RETRIES, timeout=config.ACK_TIMEOUT_S, quiet=False,
-              check="crc32", auto=False):
+              check="checksum16", auto=False):
     """Send one file. Returns a stats dict. Raises TransferError on unrecoverable failure.
 
     The transfer ends in exactly one verdict: "verified" (SHA-256 matched, file is in received/) or
@@ -287,8 +287,8 @@ def main():
     ap.add_argument("--chunk", type=int, default=config.DEFAULT_CHUNK_SIZE)
     ap.add_argument("--hmac", action="store_true", help="add HMAC-SHA256 authentication")
     ap.add_argument("--fec", action="store_true", help="Hamming(7,4) forward error correction")
-    ap.add_argument("--check", choices=P.CHECK_MODES, default="crc32",
-                    help="per-chunk error detection: CRC32 (default) or 16-bit Internet checksum")
+    ap.add_argument("--check", choices=P.CHECK_MODES, default="checksum16",
+                    help="per-chunk error detection: 16-bit checksum (default) or CRC32")
     ap.add_argument("--auto", action="store_true",
                     help="Auto Defense: adapt FEC / chunk size, raise intrusion alerts, quarantine + retry with HMAC")
     ap.add_argument("--delay", type=int, default=0, help="ms pause between chunks (for demos)")
