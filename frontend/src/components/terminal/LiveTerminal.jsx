@@ -1,18 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./LiveTerminal.css";
 
-const HANDSHAKE_LINES = [
-  { text: "[tcp] client -> server   SYN        seq=0", type: "syn" },
-  { text: "[tcp] server -> client   SYN+ACK    seq=0 ack=1", type: "syn" },
-  { text: "[tcp] client -> server   ACK        seq=1 ack=1", type: "syn" },
-  { text: "[tcp] --- connection established ---", type: "ok" },
+const pad = (n, w = 4) => String(n).padStart(w, " ");
+
+const HANDSHAKE = [
+  { label: "CLIENT", text: "SYN             -> server", type: "syn" },
+  { label: "SERVER", text: "SYN+ACK         -> client", type: "syn" },
+  { label: "CLIENT", text: "ACK             -> server", type: "syn" },
+  { label: "------", text: "connection established ------", type: "ok" },
 ];
 
 const OBJ_HEADERS = {
-  O1: "Objective 1: Clean transfer (no errors injected)",
-  O2: "Objective 2: Noise + 16-bit checksum detection",
-  O3: "Objective 3: Hamming(7,4) forward error correction",
-  O4: "Objective 4: Checksum vs CRC32 comparison",
+  O1: "Objective 1: Clean transfer (no errors)",
+  O2: "Objective 2: Noise + checksum detection",
+  O3: "Objective 3: Hamming(7,4) FEC",
+  O4: "Objective 4: Checksum vs CRC32",
 };
 
 export default function LiveTerminal({ socket, activeObj, running }) {
@@ -20,11 +22,12 @@ export default function LiveTerminal({ socket, activeObj, running }) {
   const [lines, setLines] = useState([]);
   const [handshakeDone, setHandshakeDone] = useState(false);
   const bottomRef = useRef(null);
-  const handshakeTimers = useRef([]);
+  const timers = useRef([]);
+  const seqRetries = useRef({});
 
-  const addLine = useCallback((text, type = "info") => {
+  const addLine = useCallback((label, text, type = "info") => {
     const ts = new Date().toLocaleTimeString("en-GB", { hour12: false });
-    setLines((prev) => [...prev.slice(-150), { text, type, ts }]);
+    setLines((prev) => [...prev.slice(-200), { label, text, type, ts }]);
   }, []);
 
   useEffect(() => {
@@ -32,34 +35,33 @@ export default function LiveTerminal({ socket, activeObj, running }) {
 
     setLines([]);
     setHandshakeDone(false);
-
-    handshakeTimers.current.forEach(clearTimeout);
-    handshakeTimers.current = [];
+    seqRetries.current = {};
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
 
     const header = OBJ_HEADERS[activeObj] || "Custom run";
-    addLine(`=== ${header} ===`, "header");
-    addLine("", "blank");
-    addLine("[init] Starting TCP connection to proxy:9000 ...", "info");
+    addLine("", `=== ${header} ===`, "header");
+    addLine("", "", "blank");
 
-    HANDSHAKE_LINES.forEach((line, i) => {
-      const timer = setTimeout(() => {
-        addLine(line.text, line.type);
-        if (i === HANDSHAKE_LINES.length - 1) {
+    HANDSHAKE.forEach((h, i) => {
+      const t = setTimeout(() => {
+        addLine(h.label, h.text, h.type);
+        if (i === HANDSHAKE.length - 1) {
           setTimeout(() => {
-            addLine("", "blank");
-            addLine("[meta] Sending META frame: filename, size, SHA-256 hash", "info");
-            addLine("[meta] Server ACKs META -- ready to receive chunks", "ok");
-            addLine("", "blank");
+            addLine("", "", "blank");
+            addLine("CLIENT", "META  filename, size, sha256  -> server", "send");
+            addLine("SERVER", "META  ACK                     -> ready", "ok");
+            addLine("", "", "blank");
             setHandshakeDone(true);
           }, 200);
         }
-      }, 300 + i * 350);
-      handshakeTimers.current.push(timer);
+      }, 250 + i * 300);
+      timers.current.push(t);
     });
 
     return () => {
-      handshakeTimers.current.forEach(clearTimeout);
-      handshakeTimers.current = [];
+      timers.current.forEach(clearTimeout);
+      timers.current = [];
     };
   }, [running, activeObj, addLine]);
 
@@ -68,65 +70,44 @@ export default function LiveTerminal({ socket, activeObj, running }) {
 
     return socket.onTelemetry((ev) => {
       if (ev.ev === "chunk_sent") {
-        const check = activeObj === "O3" ? "checksum16+FEC" : ev.check || "checksum16";
-        addLine(
-          `[send] DATA  seq=${ev.seq}  len=${ev.len || "1024"}B  check=${check}`,
-          "send"
-        );
+        addLine("CLIENT", `DATA  seq=${pad(ev.seq)}  len=${ev.len || 1024}B`, "send");
       } else if (ev.ev === "corrupt") {
-        const pattern = ev.pattern || "bit-flip";
-        addLine(
-          `[proxy] Chunk ${ev.seq} damaged (${pattern})  bits_flipped=${ev.bits || "?"}`,
-          "warn"
-        );
+        const bits = ev.bits || 1;
+        const detail = ev.byte_pos
+          ? `(bit ${ev.bit_pos || "?"} of byte ${ev.byte_pos})`
+          : "";
+        const pattern = ev.pattern === "swap" ? "swapped words" : `flipped ${bits} bit(s)`;
+        addLine("PROXY ", `chunk ${pad(ev.seq)}  ${pattern}  ${detail}`, "warn");
       } else if (ev.ev === "chunk_ok") {
-        addLine(
-          `[recv] ACK   seq=${ev.seq}  checksum=OK`,
-          "ok"
-        );
+        addLine("SERVER", `chunk ${pad(ev.seq)}  OK              -> ACK`, "ok");
       } else if (ev.ev === "chunk_nack") {
-        const reason = ev.reason || "checksum_fail";
-        addLine(
-          `[recv] NACK  seq=${ev.seq}  reason=${reason}`,
-          "nack"
-        );
-        addLine(
-          `[send] RETRY seq=${ev.seq}  (retransmitting...)`,
-          "retry"
-        );
+        const reason = (ev.reason || "checksum_fail").toUpperCase();
+        addLine("SERVER", `chunk ${pad(ev.seq)}  ${reason} -> NACK`, "nack");
+        const retry = (seqRetries.current[ev.seq] || 0) + 1;
+        seqRetries.current[ev.seq] = retry;
+        addLine("CLIENT", `DATA ${pad(ev.seq)} NACK (${(ev.reason || "checksum_fail")}) -> retransmit #${retry}`, "retry");
       } else if (ev.ev === "chunk_fixed") {
-        addLine(
-          `[fec]  Hamming corrected seq=${ev.seq}  syndrome=${ev.syndrome || "?"}  pos=${ev.pos || "?"}`,
-          "fix"
-        );
-        addLine(
-          `[recv] ACK   seq=${ev.seq}  (corrected, no retransmit)`,
-          "ok"
-        );
+        const syn = ev.syndrome || "?";
+        const pos = ev.pos || "?";
+        addLine("SERVER", `chunk ${pad(ev.seq)}  Hamming FIX  syndrome=${syn} pos=${pos}`, "fix");
+        addLine("SERVER", `chunk ${pad(ev.seq)}  OK (corrected)  -> ACK`, "ok");
       } else if (ev.ev === "timeout") {
-        addLine(
-          `[send] TIMEOUT seq=${ev.seq}  (no ACK received, retransmitting)`,
-          "nack"
-        );
+        addLine("CLIENT", `chunk ${pad(ev.seq)}  TIMEOUT -- no ACK, retransmitting`, "nack");
       } else if (ev.ev === "result") {
-        addLine("", "blank");
-        addLine("[done] DONE frame sent -- all chunks transferred", "info");
-        addLine(
-          `[sha]  Expected: ${ev.expected ? ev.expected.slice(0, 24) + "..." : "?"}`,
-          "info"
-        );
-        addLine(
-          `[sha]  Received: ${ev.got ? ev.got.slice(0, 24) + "..." : "?"}`,
-          "info"
-        );
+        addLine("", "", "blank");
+        addLine("CLIENT", "DONE  all chunks sent       -> server", "send");
+        addLine("SERVER", `SHA-256 expected: ${ev.expected ? ev.expected.slice(0, 20) + "..." : "?"}`, "info");
+        addLine("SERVER", `SHA-256 received: ${ev.got ? ev.got.slice(0, 20) + "..." : "?"}`, "info");
         if (ev.match) {
-          addLine("[sha]  SHA-256 MATCH -- file verified", "ok");
+          addLine("SERVER", "RESULT  SHA-256 MATCH        -> VERIFIED", "ok");
         } else {
-          addLine("[sha]  SHA-256 MISMATCH -- file rejected", "nack");
+          addLine("SERVER", "RESULT  SHA-256 MISMATCH     -> REJECTED", "nack");
         }
-        addLine("", "blank");
-        addLine("[tcp] FIN -> ACK -> FIN -> ACK  (connection closed)", "syn");
-        addLine("=== Transfer complete ===", "header");
+        addLine("", "", "blank");
+        addLine("CLIENT", "FIN                         -> server", "syn");
+        addLine("SERVER", "ACK + FIN                   -> client", "syn");
+        addLine("CLIENT", "ACK                         -> closed", "syn");
+        addLine("", `=== Transfer complete ===`, "header");
       }
     });
   }, [socket, handshakeDone, activeObj, addLine]);
@@ -157,18 +138,10 @@ export default function LiveTerminal({ socket, activeObj, running }) {
           <div className="terminal-header">
             <span className="terminal-title">Protocol Log</span>
             <div className="terminal-actions">
-              <button
-                className="terminal-clear"
-                onClick={() => setLines([])}
-                title="Clear"
-              >
+              <button className="terminal-clear" onClick={() => setLines([])} title="Clear">
                 Clear
               </button>
-              <button
-                className="terminal-close"
-                onClick={() => setOpen(false)}
-                title="Close"
-              >
+              <button className="terminal-close" onClick={() => setOpen(false)} title="Close">
                 x
               </button>
             </div>
@@ -179,10 +152,19 @@ export default function LiveTerminal({ socket, activeObj, running }) {
             )}
             {lines.map((line, i) => (
               <div key={i} className={`tline tline-${line.type}`}>
-                {line.type !== "blank" && line.type !== "header" && (
-                  <span className="tline-ts">{line.ts}</span>
+                {line.type === "blank" ? (
+                  <span className="tline-blank-space" />
+                ) : line.type === "header" ? (
+                  <span className="tline-text">{line.text}</span>
+                ) : (
+                  <>
+                    <span className="tline-ts">{line.ts}</span>
+                    <span className={`tline-label tline-label-${line.label?.trim().toLowerCase() || "info"}`}>
+                      [{line.label}]
+                    </span>
+                    <span className="tline-text">{line.text}</span>
+                  </>
                 )}
-                <span className="tline-text">{line.text}</span>
               </div>
             ))}
             <div ref={bottomRef} />

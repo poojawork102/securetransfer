@@ -7,9 +7,9 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #1a1207;
-  color: #d4a04a;
-  border: 2px solid #3d2e0a;
+  background: #1c1c1c;
+  color: #a0a0a0;
+  border: 2px solid #333;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,11 +21,13 @@
 .terminal-toggle:hover {
   transform: scale(1.1);
   box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  color: #e0e0e0;
 }
 
 .terminal-toggle.active {
-  background: #2a1f0a;
-  border-color: #d4a04a;
+  background: #222;
+  border-color: #4ec9b0;
+  color: #4ec9b0;
 }
 
 .terminal-toggle.pulse {
@@ -34,7 +36,7 @@
 
 @keyframes togglePulse {
   0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-  50% { box-shadow: 0 2px 16px rgba(212,160,74,0.5); }
+  50% { box-shadow: 0 2px 16px rgba(78,201,176,0.4); }
 }
 
 /* ---- panel ---- */
@@ -43,15 +45,15 @@
   bottom: 72px;
   right: 20px;
   z-index: 899;
-  width: 520px;
-  max-height: 400px;
-  border-radius: 10px;
+  width: 620px;
+  max-height: 420px;
+  border-radius: 8px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: #1a1207;
-  border: 1px solid #3d2e0a;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  background: #1e1e1e;
+  border: 1px solid #333;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
   animation: panelSlideUp 0.25s ease-out;
 }
 
@@ -64,17 +66,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  background: #0f0b04;
-  border-bottom: 1px solid #3d2e0a;
+  padding: 6px 12px;
+  background: #252526;
+  border-bottom: 1px solid #333;
 }
 
 .terminal-title {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #d4a04a;
+  color: #cccccc;
   font-family: ui-monospace, "Cascadia Code", "Fira Code", Consolas, monospace;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
 }
 
 .terminal-actions {
@@ -84,106 +86,110 @@
 
 .terminal-clear,
 .terminal-close {
-  font-size: 0.72rem;
-  color: #8a7340;
+  font-size: 0.7rem;
+  color: #808080;
   font-family: ui-monospace, "Cascadia Code", "Fira Code", Consolas, monospace;
   padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid #3d2e0a;
+  border-radius: 3px;
+  border: 1px solid #3e3e3e;
   background: transparent;
 }
 
 .terminal-clear:hover,
 .terminal-close:hover {
-  color: #d4a04a;
-  border-color: #d4a04a;
+  color: #cccccc;
+  border-color: #555;
 }
 
 .terminal-body {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 12px;
+  padding: 6px 0;
   font-family: ui-monospace, "Cascadia Code", "Fira Code", Consolas, monospace;
-  font-size: 0.75rem;
-  line-height: 1.6;
+  font-size: 0.73rem;
+  line-height: 1.55;
   scrollbar-width: thin;
-  scrollbar-color: #3d2e0a #1a1207;
+  scrollbar-color: #3e3e3e #1e1e1e;
 }
 
-.terminal-body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.terminal-body::-webkit-scrollbar-track {
-  background: #1a1207;
-}
-
-.terminal-body::-webkit-scrollbar-thumb {
-  background: #3d2e0a;
-  border-radius: 3px;
-}
+.terminal-body::-webkit-scrollbar { width: 6px; }
+.terminal-body::-webkit-scrollbar-track { background: #1e1e1e; }
+.terminal-body::-webkit-scrollbar-thumb { background: #3e3e3e; border-radius: 3px; }
 
 .terminal-empty {
-  color: #8a7340;
+  color: #555;
   font-style: italic;
-  padding: 20px 0;
+  padding: 20px 12px;
   text-align: center;
 }
 
 /* ---- log lines ---- */
 .tline {
   display: flex;
-  gap: 8px;
-  animation: lineAppear 0.15s ease-out;
+  gap: 0;
+  padding: 0 12px;
+  animation: lineAppear 0.12s ease-out;
 }
 
 @keyframes lineAppear {
-  from { opacity: 0; transform: translateX(-4px); }
+  from { opacity: 0; transform: translateX(-3px); }
   to   { opacity: 1; transform: translateX(0); }
 }
 
-.tline-blank {
-  height: 8px;
-}
+.tline-blank-space { height: 6px; }
 
 .tline-ts {
-  color: #5c4a20;
+  color: #555;
   flex-shrink: 0;
-  min-width: 60px;
+  width: 68px;
 }
 
-.tline-text {
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-/* line types */
-.tline-header .tline-text {
-  color: #d4a04a;
+.tline-label {
+  flex-shrink: 0;
+  width: 80px;
   font-weight: 700;
 }
 
-.tline-info .tline-text { color: #b8a070; }
-.tline-send .tline-text { color: #7ec8e3; }
-.tline-ok .tline-text   { color: #5cb85c; }
-.tline-warn .tline-text { color: #e8a838; }
-.tline-nack .tline-text { color: #e05555; }
-.tline-retry .tline-text { color: #e8a838; }
-.tline-fix .tline-text  { color: #5b9bd5; }
-
-.tline-syn .tline-text {
-  color: #c090e0;
+.tline-text {
+  white-space: pre;
 }
 
+/* ---- label colors ---- */
+.tline-label-client { color: #9cdcfe; }
+.tline-label-server { color: #4ec9b0; }
+.tline-label-proxy  { color: #ce9178; }
+.tline-label-info   { color: #555; }
+
+/* ---- line type colors for text ---- */
+.tline-header .tline-text {
+  color: #dcdcaa;
+  font-weight: 700;
+  padding: 2px 0;
+}
+
+.tline-send .tline-text  { color: #9cdcfe; }
+.tline-ok .tline-text    { color: #4ec9b0; }
+.tline-warn .tline-text  { color: #ce9178; }
+.tline-nack .tline-text  { color: #f44747; }
+.tline-retry .tline-text { color: #f44747; }
+.tline-fix .tline-text   { color: #569cd6; }
+.tline-info .tline-text  { color: #808080; }
+.tline-syn .tline-text   { color: #c586c0; }
+
+/* ---- syn labels ---- */
+.tline-syn .tline-label  { color: #c586c0; }
+
+/* special: NACK lines make the server label red */
+.tline-nack .tline-label-server { color: #f44747; }
+
 /* ---- responsive ---- */
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .terminal-panel {
     width: calc(100vw - 32px);
     right: 16px;
     bottom: 68px;
     max-height: 320px;
   }
-
   .terminal-toggle {
     bottom: 16px;
     right: 16px;
