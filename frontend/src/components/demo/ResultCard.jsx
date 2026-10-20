@@ -2,8 +2,100 @@ import { COLORS } from "../../utils/constants";
 import "./ResultCard.css";
 
 function truncHash(h) {
-  if (!h) return "—";
+  if (!h) return "---";
   return h.slice(0, 16) + "...";
+}
+
+const WIRESHARK_HINTS = {
+  O1: [
+    {
+      title: "TCP 3-way handshake",
+      detail: "First 3 packets: SYN, SYN+ACK, ACK on port 8000 (proxy) and 9000 (server).",
+      filter: "tcp.flags.syn == 1",
+    },
+    {
+      title: "Frame header 46 54 02 02",
+      detail: "Click any data packet. The payload starts with bytes 46 54 (ASCII \"FT\"), version 02, type 02 (DATA).",
+      filter: "tcp.port == 9000 && tcp.len > 0",
+    },
+    {
+      title: "Sequence numbers 0, 1, 2 ...",
+      detail: "Bytes 5-8 of our header increment by 1 per chunk. This is our application-level sequence, not TCP's.",
+      filter: "tcp.port == 9000 && tcp.len > 0",
+    },
+    {
+      title: "ACK after every chunk",
+      detail: "After each DATA frame, the server sends a small ACK frame (type byte 03). This is stop-and-wait ARQ.",
+      filter: "tcp.port == 9000 && tcp.len > 0",
+    },
+  ],
+  O2: [
+    {
+      title: "NACK frames for bad chunks",
+      detail: "When the checksum fails, the server sends type 04 (NACK) with the reason \"checksum_fail\" in the payload.",
+      filter: "frame contains \"checksum_fail\"",
+    },
+    {
+      title: "Retransmission after NACK",
+      detail: "The same sequence number appears twice on port 9000. The second time is the retransmission.",
+      filter: "tcp.port == 9000 && tcp.len > 0",
+    },
+    {
+      title: "Checksum in CHECK field",
+      detail: "Offsets 13-16 of the header hold a 16-bit value zero-padded to 4 bytes. FLAGS byte (offset 4) is 04.",
+      filter: "tcp.port == 9000 && frame[4] == 04",
+    },
+  ],
+  O3: [
+    {
+      title: "Hamming-encoded payload",
+      detail: "FLAGS = 06 (FEC + checksum). LEN is exactly 2x the original data size. Every payload byte is <= 0x7F.",
+      filter: "tcp.port == 9000 && tcp.len > 0",
+    },
+    {
+      title: "No NACK frames",
+      detail: "All errors are corrected by Hamming in place. You should see only ACK (type 03), no NACK (type 04).",
+      filter: "tcp.port == 9000 && tcp.len > 0",
+    },
+    {
+      title: "Same throughput despite 2x payload",
+      detail: "The I/O graph shows similar throughput because the link is latency-bound, not bandwidth-bound.",
+      filter: "Statistics > I/O Graphs",
+    },
+  ],
+  O4_checksum: [
+    {
+      title: "FLAGS = 04 (checksum mode)",
+      detail: "The FLAGS byte at offset 4 has bit 2 set, meaning the 16-bit checksum is used.",
+      filter: "tcp.port == 9000 && frame[4] == 04",
+    },
+    {
+      title: "No NACK (swap undetected)",
+      detail: "Word swap leaves the checksum unchanged. Every chunk gets ACK even though data is corrupted.",
+      filter: "tcp.port == 9000",
+    },
+  ],
+  O4_crc: [
+    {
+      title: "FLAGS = 00 (CRC32 mode)",
+      detail: "The FLAGS byte at offset 4 is 00 (bit 2 clear), meaning CRC32 is used instead of checksum.",
+      filter: "tcp.port == 9000 && frame[4] == 00",
+    },
+    {
+      title: "NACK with crc_fail",
+      detail: "CRC32 detects the word swap. The server sends NACK with \"crc_fail\" and the client retransmits.",
+      filter: "frame contains \"crc_fail\"",
+    },
+  ],
+};
+
+function getWiresharkHints(objective, label) {
+  if (label) {
+    if (label.includes("CRC")) return WIRESHARK_HINTS.O4_crc;
+    return WIRESHARK_HINTS.O4_checksum;
+  }
+  if (objective) return WIRESHARK_HINTS[objective.id] || [];
+  return [];
 }
 
 function buildSummary(verified, objective, nacked, corrected, total) {
@@ -23,7 +115,7 @@ function buildSummary(verified, objective, nacked, corrected, total) {
 
     case "O2":
       if (verified) {
-        return `The proxy randomly flipped bits in some chunks to simulate a noisy channel. The server's 16-bit checksum detected ${nacked} corrupted chunk${nacked !== 1 ? "s" : ""} and sent a NACK for each. The client retransmitted those chunks until they passed. The final file matches the original.`;
+        return `The proxy randomly flipped bits in some chunks to simulate a noisy channel. The server's 16-bit checksum detected ${nacked} corrupted chunk${nacked !== 1 ? "s" : ""} and sent a NACK for each one. The client retransmitted those chunks until they passed. The final file matches the original.`;
       }
       return "Some corrupted chunks slipped past the checksum. The file's SHA-256 does not match the original.";
 
@@ -83,6 +175,7 @@ export default function ResultCard({ result, objective, completed, chunks, label
   const explanation = label
     ? null
     : buildExplanation(verified, objective);
+  const hints = getWiresharkHints(objective, label);
 
   return (
     <div className={`result-card card ${verified ? "verified" : "rejected"}`}>
@@ -187,6 +280,30 @@ export default function ResultCard({ result, objective, completed, chunks, label
           <summary>How this works</summary>
           <p className="muted">{explanation}</p>
         </details>
+      )}
+
+      {hints.length > 0 && (
+        <div className="wireshark-hints">
+          <h4 className="result-section-title">What to look for in Wireshark</h4>
+          <div className="hint-grid">
+            {hints.map((h, i) => (
+              <div key={i} className="hint-card">
+                <svg className="hint-icon" width="36" height="36" viewBox="0 0 36 36" aria-hidden="true">
+                  <rect x="3" y="6" width="30" height="24" rx="3" fill="none" stroke="var(--border)" strokeWidth="1.2" />
+                  <line x1="3" y1="12" x2="33" y2="12" stroke="var(--border)" strokeWidth="0.8" />
+                  <line x1="3" y1="16" x2="28" y2="16" stroke="var(--border)" strokeWidth="0.5" opacity="0.5" />
+                  <line x1="3" y1="19" x2="25" y2="19" stroke="var(--border)" strokeWidth="0.5" opacity="0.5" />
+                  <line x1="3" y1="22" x2="30" y2="22" stroke="var(--border)" strokeWidth="0.5" opacity="0.5" />
+                </svg>
+                <div className="hint-body">
+                  <strong className="hint-title">{h.title}</strong>
+                  <span className="hint-detail">{h.detail}</span>
+                  <code className="hint-filter">{h.filter}</code>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {chunks.length > 0 && <ChunkMap chunks={chunks} />}
