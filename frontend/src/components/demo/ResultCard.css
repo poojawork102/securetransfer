@@ -18,42 +18,68 @@
   font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .verified .result-title { color: var(--green); }
 .rejected .result-title { color: var(--red); }
 
-.result-row {
-  display: flex;
-  gap: 12px;
-  padding: 6px 0;
-  font-size: 0.85rem;
+.result-summary {
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.result-section {
+  margin-bottom: 12px;
+}
+
+.result-section-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  padding-bottom: 4px;
   border-bottom: 1px solid var(--border);
 }
 
-.result-row:last-of-type { border-bottom: none; }
+.result-row {
+  display: flex;
+  gap: 12px;
+  padding: 5px 0;
+  font-size: 0.85rem;
+}
 
 .result-label {
-  min-width: 100px;
+  min-width: 110px;
   color: var(--text-muted);
   flex-shrink: 0;
 }
 
+.result-value-warn { color: var(--amber); }
+.result-value-fix  { color: var(--blue); }
+.result-value-bad  { color: var(--red); }
+
 .result-why {
   margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
 }
 
 .result-why summary {
   cursor: pointer;
   font-size: 0.85rem;
+  font-weight: 500;
   color: var(--text-muted);
 }
 
 .result-why p {
   margin-top: 8px;
   font-size: 0.85rem;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 /* chunk map */
@@ -61,6 +87,12 @@
   margin-top: 16px;
   padding-top: 12px;
   border-top: 1px solid var(--border);
+}
+
+.chunk-map-title {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
 }
 
 .chunk-map-grid {
