@@ -6,6 +6,7 @@ import HowItWorksTab from "./components/howItWorks/HowItWorksTab";
 import CalculatorTab from "./components/calculator/CalculatorTab";
 import ResultsTab from "./components/results/ResultsTab";
 import WiresharkTab from "./components/wireshark/WiresharkTab";
+import LiveTerminal from "./components/terminal/LiveTerminal";
 import { useSocket } from "./hooks/useSocket";
 
 const TAB_LIST = [
@@ -18,6 +19,7 @@ const TAB_LIST = [
 
 export default function App() {
   const [tab, setTab] = useState(() => localStorage.getItem("st-tab") || "demo");
+  const [demoState, setDemoState] = useState({ running: false, activeObj: null });
   const socket = useSocket();
 
   useEffect(() => {
@@ -29,12 +31,17 @@ export default function App() {
       <Header status={socket.status} />
       <Tabs tabs={TAB_LIST} active={tab} onChange={setTab} />
       <main className="tab-content">
-        {tab === "demo" && <DemoTab socket={socket} />}
+        {tab === "demo" && <DemoTab socket={socket} onStateChange={setDemoState} />}
         {tab === "howitworks" && <HowItWorksTab />}
         {tab === "calculator" && <CalculatorTab />}
         {tab === "results" && <ResultsTab />}
         {tab === "wireshark" && <WiresharkTab />}
       </main>
+      <LiveTerminal
+        socket={socket}
+        activeObj={demoState.activeObj}
+        running={demoState.running}
+      />
     </div>
   );
 }

@@ -216,7 +216,7 @@ function LineChart({ data, xKey, yKey, label, color, xLabel, yLabel }) {
 function NoData() {
   return (
     <p className="muted" style={{ fontSize: "0.85rem", padding: "20px 0" }}>
-      Run <code>python bench.py</code> to generate data.
+      No data yet. Restart with <code>python run_all.py</code> to generate benchmarks automatically, or run <code>python bench.py</code> manually.
     </p>
   );
 }

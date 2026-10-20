@@ -6,7 +6,7 @@ import { OBJECTIVES } from "../../utils/constants";
 import { sendFile, setProxy, getSamples } from "../../utils/api";
 import "./DemoTab.css";
 
-export default function DemoTab({ socket }) {
+export default function DemoTab({ socket, onStateChange }) {
   const [running, setRunning] = useState(false);
   const [completed, setCompleted] = useState({});
   const [activeObj, setActiveObj] = useState(null);
@@ -22,6 +22,10 @@ export default function DemoTab({ socket }) {
   useEffect(() => {
     getSamples().then(setSamples).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (onStateChange) onStateChange({ running, activeObj });
+  }, [running, activeObj, onStateChange]);
 
   const addHappening = useCallback((text, type = "info") => {
     setHappenings((prev) => {
