@@ -9,13 +9,12 @@
 | 0 | 2 | MAGIC | ASCII "FT" (0x46 0x54) |
 | 2 | 1 | VER | Protocol version (2) |
 | 3 | 1 | TYPE | 1=META, 2=DATA, 3=ACK, 4=NACK, 5=DONE, 6=RESULT, 7=ERR |
-| 4 | 1 | FLAGS | bit0=HMAC, bit1=Hamming FEC, bit2=checksum16 (else CRC32) |
+| 4 | 1 | FLAGS | bit0=reserved, bit1=Hamming FEC, bit2=checksum16 (else CRC32) |
 | 5 | 4 | SEQ | Chunk sequence number (0-based) |
 | 9 | 4 | LEN | Payload length in bytes |
 | 13 | 4 | CHECK | 16-bit checksum (zero-padded to 4 bytes) or CRC32 |
 
-Optional fields after the header:
-- HMAC (32 bytes): HMAC-SHA256(key, header + plaintext), present if FLAGS bit0 is set.
+After the header:
 - PAYLOAD (LEN bytes): the chunk data, or Hamming-encoded data if FLAGS bit1 is set.
 
 ## Exchange (stop-and-wait ARQ)
@@ -50,20 +49,4 @@ Two bit errors in one codeword cause a miscorrection, caught by the checksum/CRC
 
 After all chunks are received, the server computes SHA-256 of the assembled file and
 compares it with the hash sent in the META frame. If they match, the file is moved to
-`received/`. If not, the file is moved to `quarantine/` with a JSON sidecar.
-
-## Authentication
-
-HMAC-SHA256 uses a pre-shared key (ST_KEY environment variable) to authenticate each
-frame. The attacker (proxy in MITM mode) can recompute the checksum or CRC after
-modifying data, but cannot recompute the HMAC without the key.
-
-## Auto Defense (closed-loop control)
-
-The adaptive rules engine (`adaptive.py`) monitors error rates and adjusts:
-- 10% or more check failures: enable Hamming FEC.
-- Burst errors: halve the chunk size.
-- Less than 2% failures over 30 chunks: disable FEC.
-- Any HMAC failure: intrusion alert.
-- SHA-256 mismatch: quarantine the file, retry with HMAC.
-- 8 consecutive failures: give up.
+`received/`. If not, the file is saved as `<name>.rejected` in `received/`.

@@ -72,12 +72,12 @@
   min-height: 36px;
 }
 
-/* flow diagram — horizontal track */
-.flow-section {
+/* step list — vertical layout (one step per row) */
+.step-section {
   margin-bottom: 20px;
 }
 
-.flow-label {
+.step-section-label {
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-muted);
@@ -86,40 +86,18 @@
   letter-spacing: 0.04em;
 }
 
-.flow-track {
+.step-list {
+  list-style: none;
   display: flex;
-  align-items: flex-start;
-  overflow-x: auto;
-  gap: 0;
-  padding-bottom: 8px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.flow-track::-webkit-scrollbar {
-  height: 5px;
+.step-item {
+  width: 100%;
 }
 
-.flow-track::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
-}
-
-.flow-item {
-  display: flex;
-  align-items: flex-start;
-  flex-shrink: 0;
-}
-
-.flow-arrow-h {
-  display: flex;
-  align-items: center;
-  padding: 18px 2px 0;
-}
-
-.flow-card {
-  min-width: 220px;
-  max-width: 300px;
+.step-card {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -127,23 +105,23 @@
   transition: border-color 0.15s;
 }
 
-.flow-card:hover {
+.step-card:hover {
   border-color: rgba(34, 211, 238, 0.25);
 }
 
-.flow-card-result {
+.step-card-result {
   border-color: var(--accent);
-  background: rgba(34, 211, 238, 0.04);
+  background: rgba(8, 145, 178, 0.06);
 }
 
-.flow-card-header {
+.step-card-header {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 6px;
 }
 
-.flow-card-num {
+.step-card-num {
   flex-shrink: 0;
   width: 20px;
   height: 20px;
@@ -157,32 +135,31 @@
   font-weight: 700;
 }
 
-.flow-card-result .flow-card-num {
+.step-card-result .step-card-num {
   background: var(--green, #22c55e);
 }
 
-.flow-card-title {
+.step-card-title {
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text);
-  white-space: nowrap;
 }
 
-.flow-card-text {
+.step-card-text {
   font-size: 0.75rem;
   color: var(--text-muted);
   line-height: 1.45;
   margin: 0 0 6px;
 }
 
-.flow-card-rows {
+.step-card-rows {
   display: flex;
   flex-direction: column;
   gap: 1px;
 }
 
-/* flow row variants */
-.flow-row {
+/* step row variants */
+.step-row {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -191,7 +168,7 @@
   line-height: 1.5;
 }
 
-.flow-row-label {
+.step-row-label {
   color: var(--text-muted);
   font-size: 0.68rem;
   min-width: 44px;
@@ -199,49 +176,49 @@
   font-family: var(--font);
 }
 
-.flow-row-bits {
+.step-row-bits {
   letter-spacing: 0.5px;
 }
 
-.flow-row-bits.gen {
+.step-row-bits.gen {
   color: var(--accent);
 }
 
-.flow-row-note {
+.step-row-note {
   color: var(--text-muted);
   font-size: 0.68rem;
   font-family: var(--font);
   margin-left: 4px;
 }
 
-.flow-row-sep {
+.step-row-sep {
   height: 1px;
   background: var(--border);
   margin: 2px 0;
 }
 
 /* table rows (position/role/bit grids) */
-.flow-table-row {
+.step-table-row {
   display: flex;
   align-items: center;
   gap: 6px;
   margin: 1px 0;
 }
 
-.flow-table-label {
+.step-table-label {
   font-size: 0.68rem;
   color: var(--text-muted);
   min-width: 44px;
   text-align: right;
 }
 
-.flow-table-cells {
+.step-table-cells {
   display: flex;
   gap: 2px;
   flex-wrap: wrap;
 }
 
-.flow-table-cell {
+.step-table-cell {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -256,30 +233,30 @@
   color: var(--text);
 }
 
-.flow-table-cell.cell-parity {
+.step-table-cell.cell-parity {
   background: rgba(34, 211, 238, 0.1);
   color: var(--accent);
   border-color: rgba(34, 211, 238, 0.2);
 }
 
-.flow-table-cell.cell-data {
+.step-table-cell.cell-data {
   background: rgba(99, 102, 241, 0.1);
   color: #a5b4fc;
   border-color: rgba(99, 102, 241, 0.2);
 }
 
-.flow-table-cell.cell-dot {
+.step-table-cell.cell-dot {
   border-color: transparent;
   background: transparent;
   color: var(--text-muted);
 }
 
 /* formula rows */
-.flow-formula {
+.step-formula {
   padding: 2px 0;
 }
 
-.flow-formula code {
+.step-formula code {
   font-family: var(--mono);
   font-size: 0.75rem;
   color: var(--accent);

@@ -4,7 +4,7 @@ SecureTransfer DASHBOARD: Flask + Socket.IO.
 Listens for UDP telemetry from client/proxy/server and pushes it to the browser.
 Lets you pick a file and options, and launch the client from the browser.
 Changes the proxy channel mode live (UDP control message).
-Keeps a session log for the downloadable report, and serves the Numerical Lab API.
+Keeps a session log and serves the Numerical Lab API.
 
 Run:  python dashboard/app.py      then open http://localhost:5050
 """
@@ -43,7 +43,6 @@ _ctrl = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 LAST_SEEN = {"client": 0.0, "proxy": 0.0, "server": 0.0}
 PROXY_STATE = {}
 SESSION = []
-LAST_RUN = {}
 
 
 def telemetry_listener():
@@ -75,11 +74,25 @@ def assets(name):
     return send_from_directory(os.path.join(DIST_DIR, "assets"), name)
 
 
+@app.route("/favicon.svg")
+def favicon():
+    return send_from_directory(os.path.join(DIST_DIR), "favicon.svg")
+
+
 # ------------------------------------------------------------ simple APIs
 @app.get("/api/samples")
 def samples():
-    files = sorted(f for f in os.listdir(config.SAMPLES_DIR) if not f.startswith("."))
-    return jsonify([{"name": f, "size": os.path.getsize(os.path.join(config.SAMPLES_DIR, f))} for f in files])
+    dirs = [config.SAMPLES_DIR]
+    demo_dir = os.path.join(BASE_DIR, "demo_files")
+    if os.path.isdir(demo_dir):
+        dirs.append(demo_dir)
+    files = []
+    for d in dirs:
+        for f in sorted(os.listdir(d)):
+            if f.startswith("."):
+                continue
+            files.append({"name": f, "size": os.path.getsize(os.path.join(d, f)), "dir": os.path.basename(d)})
+    return jsonify(files)
 
 
 @app.get("/api/health")
@@ -98,36 +111,27 @@ def set_proxy():
 
 # ------------------------------------------------------------ sending
 def protection_text(stats):
-    fp = stats.get("final_protection", {})
-    parts = ["Checksum16" if fp.get("check") == "checksum16" else "CRC32"]
-    if fp.get("fec"):
+    parts = ["Checksum16" if stats.get("check") == "checksum16" else "CRC32"]
+    if stats.get("fec"):
         parts.append("Hamming")
-    if fp.get("hmac"):
-        parts.append("HMAC")
-    return " + ".join(parts) + (" (auto)" if stats.get("auto") else "")
+    return " + ".join(parts)
 
 
 def record_session(opts, path, stats=None, error=None):
     stats = stats or (error.stats if error else {}) or {}
-    attempts = stats.get("attempts", [])
-    ss = lambda k: sum(a.get("server_stats", {}).get(k, 0) for a in attempts)  # noqa: E731
+    ss = stats.get("server_stats", {})
     if error:
         verdict = "Failed: " + str(error)
-    elif stats.get("verified") and len(attempts) > 1:
-        verdict = "Verified after recovery"
     elif stats.get("verified"):
         verdict = "Verified"
     else:
-        verdict = "Rejected and quarantined"
+        verdict = "Rejected"
     SESSION.append({
         "n": len(SESSION) + 1, "time": time.strftime("%H:%M:%S"),
         "file": os.path.basename(path), "protection": protection_text(stats) if stats else "-",
-        "retransmits": stats.get("retransmits", 0), "bits_fixed": ss("bits_fixed"),
-        "forged_blocked": ss("hmac_fail"), "verdict": verdict,
-        "ok": bool(stats.get("verified")) and not error,
+        "retransmits": stats.get("retransmits", 0), "bits_fixed": ss.get("bits_fixed", 0),
+        "verdict": verdict, "ok": bool(stats.get("verified")) and not error,
     })
-    LAST_RUN.clear()
-    LAST_RUN.update({"orig": path, "quarantine": stats.get("quarantine_path")})
 
 
 @app.post("/api/send")
@@ -138,10 +142,16 @@ def send():
         opts = json.loads(request.form.get("opts", "{}"))
         up = request.files.get("file")
         if up and up.filename:
-            path = os.path.join(UPLOAD_DIR, os.path.basename(up.filename))
+            safe_name = os.path.basename(up.filename)
+            path = os.path.join(UPLOAD_DIR, safe_name)
             up.save(path)
         else:
-            path = os.path.join(config.SAMPLES_DIR, os.path.basename(opts.get("sample", "sample.txt")))
+            sample = os.path.basename(opts.get("sample", "sample.txt"))
+            path = os.path.join(config.SAMPLES_DIR, sample)
+            if not os.path.isfile(path):
+                demo_path = os.path.join(BASE_DIR, "demo_files", sample)
+                if os.path.isfile(demo_path):
+                    path = demo_path
         if not os.path.isfile(path):
             _busy.release()
             return jsonify(ok=False, error="file not found"), 400
@@ -153,11 +163,11 @@ def send():
         try:
             stats = st_client.send_file(
                 path, config.HOST, int(opts.get("port", config.PROXY_PORT)),
-                chunk_size=int(opts.get("chunk", 1024)), use_hmac=bool(opts.get("hmac")),
-                use_fec=bool(opts.get("fec")), delay_ms=int(opts.get("delay", 40)),
+                chunk_size=int(opts.get("chunk", 1024)),
+                use_fec=bool(opts.get("fec")),
+                delay_ms=int(opts.get("delay", 40)),
                 timeout=float(opts.get("timeout", 1.0)), quiet=False,
-                check="checksum16" if opts.get("check") == "checksum16" else "crc32",
-                auto=bool(opts.get("auto")))
+                check="checksum16" if opts.get("check") == "checksum16" else "crc32")
             record_session(opts, path, stats=stats)
         except st_client.TransferError as e:
             print(f"[DASH  ] transfer failed: {e}", flush=True)

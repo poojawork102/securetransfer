@@ -9,7 +9,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          three: ["three"],
           chart: ["chart.js"],
         },
       },

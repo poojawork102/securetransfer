@@ -1,6 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import ObjectiveStepper from "./ObjectiveStepper";
-import Stage3D from "./Stage3D";
 import WhatsHappening from "./WhatsHappening";
 import ResultCard from "./ResultCard";
 import { OBJECTIVES } from "../../utils/constants";
@@ -12,11 +11,13 @@ export default function DemoTab({ socket }) {
   const [completed, setCompleted] = useState({});
   const [activeObj, setActiveObj] = useState(null);
   const [result, setResult] = useState(null);
+  const [compareResult, setCompareResult] = useState(null);
   const [happenings, setHappenings] = useState([]);
   const [chunks, setChunks] = useState([]);
   const [samples, setSamples] = useState([]);
   const [customOpen, setCustomOpen] = useState(false);
   const [hasRun, setHasRun] = useState(false);
+  const pendingCompare = useRef(false);
 
   useEffect(() => {
     getSamples().then(setSamples).catch(() => {});
@@ -32,6 +33,20 @@ export default function DemoTab({ socket }) {
       return [...trimmed, { text, type, count: 1 }];
     });
   }, []);
+
+  const startCompareRun = useCallback(async () => {
+    addHappening("Now running CRC32 for comparison...", "info");
+    setChunks([]);
+    const fd = new FormData();
+    const opts = {
+      sample: samples[0]?.name || "sample.txt",
+      check: "crc32",
+      fec: false,
+      chunk: 1024,
+    };
+    fd.append("opts", JSON.stringify(opts));
+    await sendFile(fd).catch(() => setRunning(false));
+  }, [samples, addHappening]);
 
   useEffect(() => {
     return socket.onTelemetry((ev) => {
@@ -65,22 +80,31 @@ export default function DemoTab({ socket }) {
         );
       } else if (ev.ev === "result") {
         const verified = ev.match === true;
-        setResult({
-          verified,
-          expected: ev.expected,
-          got: ev.got,
-        });
-        setRunning(false);
-        if (activeObj) {
-          const obj = OBJECTIVES.find((o) => o.id === activeObj);
-          if (obj) {
-            const met = checkObjectiveMet(obj, ev);
-            setCompleted((prev) => ({ ...prev, [activeObj]: met }));
+        const thisResult = { verified, expected: ev.expected, got: ev.got };
+
+        if (pendingCompare.current) {
+          pendingCompare.current = false;
+          setCompareResult(thisResult);
+          setRunning(false);
+          setCompleted((prev) => ({ ...prev, O4: true }));
+        } else if (activeObj === "O4") {
+          setResult(thisResult);
+          pendingCompare.current = true;
+          startCompareRun();
+        } else {
+          setResult(thisResult);
+          setRunning(false);
+          if (activeObj) {
+            const obj = OBJECTIVES.find((o) => o.id === activeObj);
+            if (obj) {
+              const met = checkObjectiveMet(obj, ev);
+              setCompleted((prev) => ({ ...prev, [activeObj]: met }));
+            }
           }
         }
       }
     });
-  }, [socket, addHappening, activeObj]);
+  }, [socket, addHappening, activeObj, startCompareRun]);
 
   function checkObjectiveMet(obj, resultEv) {
     if (obj.id === "O1") return resultEv.match === true;
@@ -96,10 +120,12 @@ export default function DemoTab({ socket }) {
 
     setActiveObj(objId);
     setResult(null);
+    setCompareResult(null);
     setHappenings([]);
     setChunks([]);
     setRunning(true);
     setHasRun(true);
+    pendingCompare.current = false;
 
     const cfg = obj.config;
     await setProxy({
@@ -113,9 +139,7 @@ export default function DemoTab({ socket }) {
       sample: samples[0]?.name || "sample.txt",
       check: cfg.check || "checksum16",
       fec: cfg.fec || false,
-      hmac: cfg.hmac || false,
       chunk: 1024,
-      auto: false,
     };
     fd.append("opts", JSON.stringify(opts));
     await sendFile(fd).catch(() => setRunning(false));
@@ -124,14 +148,17 @@ export default function DemoTab({ socket }) {
   async function runCustom(opts) {
     setActiveObj(null);
     setResult(null);
+    setCompareResult(null);
     setHappenings([]);
     setChunks([]);
     setRunning(true);
     setHasRun(true);
+    pendingCompare.current = false;
 
     await setProxy({
       mode: opts.mode || "clean",
       rate: parseFloat(opts.rate) || 0,
+      pattern: opts.pattern || "random",
     });
 
     const fd = new FormData();
@@ -139,9 +166,7 @@ export default function DemoTab({ socket }) {
       sample: opts.sample || samples[0]?.name || "sample.txt",
       check: opts.check || "checksum16",
       fec: opts.fec || false,
-      hmac: opts.hmac || false,
       chunk: parseInt(opts.chunk) || 1024,
-      auto: false,
     }));
     if (opts.file) fd.append("file", opts.file);
     await sendFile(fd).catch(() => setRunning(false));
@@ -222,16 +247,28 @@ export default function DemoTab({ socket }) {
         </details>
       </div>
       <div className="demo-main">
-        <Stage3D chunks={chunks} running={running} />
         <WhatsHappening items={happenings} />
-        {result && (
+        {activeObj === "O4" && result && compareResult ? (
+          <div className="compare-cards">
+            <ResultCard
+              result={result}
+              label="Run 1: Checksum"
+              chunks={[]}
+            />
+            <ResultCard
+              result={compareResult}
+              label="Run 2: CRC32"
+              chunks={chunks}
+            />
+          </div>
+        ) : result ? (
           <ResultCard
             result={result}
             objective={OBJECTIVES.find((o) => o.id === activeObj)}
             completed={completed[activeObj]}
             chunks={chunks}
           />
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -239,11 +276,12 @@ export default function DemoTab({ socket }) {
 
 function CustomRunForm({ samples, onRun, running }) {
   const [mode, setMode] = useState("clean");
-  const [rate, setRate] = useState("0.2");
+  const [rate, setRate] = useState("20");
   const [check, setCheck] = useState("checksum16");
   const [fec, setFec] = useState(false);
-  const [hmac, setHmac] = useState(false);
   const [sample, setSample] = useState("");
+  const [file, setFile] = useState(null);
+  const [pattern, setPattern] = useState("random");
 
   return (
     <div className="custom-form">
@@ -257,19 +295,32 @@ function CustomRunForm({ samples, onRun, running }) {
         </select>
       </label>
       <label>
+        Or upload
+        <input type="file" onChange={(e) => setFile(e.target.files[0])} />
+      </label>
+      <label>
         Network
         <select value={mode} onChange={(e) => setMode(e.target.value)}>
           <option value="clean">Clean</option>
           <option value="noise">Noise</option>
-          <option value="attack">MITM attack</option>
         </select>
       </label>
+      {mode === "noise" && (
+        <label>
+          Pattern
+          <select value={pattern} onChange={(e) => setPattern(e.target.value)}>
+            <option value="random">Random bit flips</option>
+            <option value="swap">Word swap (fools checksum)</option>
+          </select>
+        </label>
+      )}
       <label>
-        Error rate
-        <input type="number" min="0" max="1" step="0.05" value={rate} onChange={(e) => setRate(e.target.value)} />
+        Damaged chunks: {rate}%
+        <input type="range" min="0" max="50" step="1" value={rate}
+          onChange={(e) => setRate(e.target.value)} />
       </label>
       <label>
-        Check method
+        Error check
         <select value={check} onChange={(e) => setCheck(e.target.value)}>
           <option value="checksum16">16-bit checksum</option>
           <option value="crc32">CRC32</option>
@@ -277,16 +328,12 @@ function CustomRunForm({ samples, onRun, running }) {
       </label>
       <label className="checkbox-label">
         <input type="checkbox" checked={fec} onChange={(e) => setFec(e.target.checked)} />
-        Hamming FEC
-      </label>
-      <label className="checkbox-label">
-        <input type="checkbox" checked={hmac} onChange={(e) => setHmac(e.target.checked)} />
-        HMAC-SHA256
+        Hamming(7,4) repair
       </label>
       <button
         className="btn-send"
         disabled={running}
-        onClick={() => onRun({ mode, rate, check, fec, hmac, sample })}
+        onClick={() => onRun({ mode, rate: parseInt(rate) / 100, check, fec, sample, file, pattern })}
       >
         {running ? "Sending..." : "Send"}
       </button>

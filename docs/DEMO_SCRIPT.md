@@ -1,62 +1,65 @@
 # Demo script (5 minutes)
 
-## Setup (before the demo)
+## Setup
 
-1. Open a terminal and run `python run_all.py` (or `start.bat`).
-2. Open http://localhost:5050 in a browser.
-3. Confirm the status shows "System ready" (green dot in the header).
+Open three terminals:
 
-## Objectives (4 minutes)
+```
+python server.py           (terminal 1)
+python proxy.py            (terminal 2)
+python dashboard/app.py    (terminal 3)
+```
 
-### O1: Does the file arrive intact? (1 minute)
+Open http://localhost:5050 in a browser. Confirm the status shows "System ready".
+
+Or use `python run_all.py` to start everything at once.
+
+## Objective 1: Clean transfer (1 min)
 
 Press **1** or click the first objective.
 
-- The proxy is set to "clean" mode (no errors).
-- Watch: all chunks travel from Client to Server, turning green on arrival.
+- Proxy: clean mode (no errors).
+- All chunks are sent once and ACKed.
 - Result card: **VERIFIED**. SHA-256 hash matches.
-- Point to make: the protocol works, TCP delivers chunks in order, SHA-256 confirms the file.
+- Point to make: the protocol works, TCP delivers chunks in order, SHA-256 confirms.
 
-### O2: Does the checksum detect damaged chunks? (1 minute)
+## Objective 2: Noise + checksum detection (1 min)
 
 Press **2**.
 
-- The proxy flips random bits in 30% of chunks.
-- Watch: some chunks turn amber (damaged), then red (NACK), then re-sent.
-- "What is happening" shows: "Server recomputes the checksum of chunk N: mismatch, sends NACK, chunk is re-sent."
+- Proxy flips random bits in 30% of chunks.
+- Some chunks are NACKed (checksum mismatch) and retransmitted.
 - Result card: **VERIFIED** after retransmissions.
-- Point to make: the 16-bit checksum detects corruption, NACK triggers retransmission.
+- Point to make: the 16-bit checksum catches random bit errors.
 
-### O3: Can Hamming fix errors without retransmission? (1 minute)
+## Objective 3: Hamming forward error correction (1 min)
 
 Press **3**.
 
 - Same noise, but Hamming(7,4) FEC is enabled.
-- Watch: chunks turn blue (corrected by Hamming), no red (no NACKs).
-- Result card: **VERIFIED**, 0 retransmissions.
-- Point to make: FEC repairs 1-bit errors in place, saving round trips.
+- All 1-bit errors are corrected in place. 0 retransmissions.
+- Result card: **VERIFIED**, chunks show "corrected" status.
+- Point to make: FEC repairs errors without retransmission.
 
-### O4: Checksum vs CRC32: which detects more? (1 minute)
+## Objective 4: Checksum vs CRC32 (1 min)
 
-Press **4**.
+Press **4**. This runs two transfers back-to-back:
 
-- The proxy swaps two 16-bit words in corrupted chunks.
-- Watch: the checksum does not detect the swap (the sum is unchanged).
-- Result card: **REJECTED**. File is quarantined.
-- Point to make: the checksum is order-insensitive, CRC32 catches this. Show the "How it works" tab comparison table.
+1. First with checksum16 against word-swap corruption.
+2. Then with CRC32 against the same corruption.
 
-## Extension (1 minute, if time allows)
+- Run 1 (checksum): word swap goes undetected, file is **REJECTED** (SHA-256 mismatch).
+- Run 2 (CRC32): word swap is caught, chunks retransmitted, file is **VERIFIED**.
+- Point to make: a checksum is order-insensitive, CRC32 detects what checksum misses.
 
-Switch to the "Beyond the brief" tab and run:
+## Calculator tab (30 sec)
 
-1. **Attack without HMAC**: the proxy forges chunks and recomputes the checksum. The server accepts them. SHA-256 mismatch: file is corrupted.
-2. **Attack with HMAC**: same attack, but every forged chunk is rejected (HMAC cannot be recomputed without the key). File is verified.
-
-Point to make: a checksum is not authentication. Only a keyed MAC stops forgery.
+Show the Calculator tab. Enter a binary string and solve checksum, CRC, or Hamming step-by-step, like an exam answer sheet.
 
 ## Questions to expect
 
+- Why do we need a proxy? (TCP never corrupts data on localhost.)
 - Why not just use TCP's checksum? (It is only 16 bits, and only covers one hop.)
 - Why does Hamming double the data size? (Each 4-bit nibble becomes 7 bits.)
 - Can Hamming fix 2-bit errors? (No, it miscorrects. The checksum/CRC catches it.)
-- What does HMAC add over CRC? (A secret key, so the attacker cannot recompute it.)
+- Why SHA-256 at the end? (End-to-end verification: catches anything the per-chunk check missed.)

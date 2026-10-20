@@ -108,7 +108,7 @@ function NoiseChart({ data }) {
     if (!data || !canvasRef.current) return;
     if (chartRef.current) chartRef.current.destroy();
 
-    const arqRows = data.filter((r) => r.scheme === "CRC+ARQ");
+    const arqRows = data.filter((r) => r.scheme === "Checksum + ARQ" || r.scheme === "CRC+ARQ");
     const fecRows = data.filter((r) => r.scheme === "Hamming FEC");
     const labels = arqRows.map((r) => r.error_rate_pct + "%");
 
@@ -222,21 +222,23 @@ function NoData() {
 }
 
 function makeOptions(xLabel, yLabel) {
+  const muted = getComputedStyle(document.documentElement).getPropertyValue("--text-muted").trim() || "#6b7280";
+  const grid = getComputedStyle(document.documentElement).getPropertyValue("--border").trim() || "#d1d5db";
   return {
     responsive: true,
     plugins: {
-      legend: { labels: { color: "#94a3b8", font: { size: 11 } } },
+      legend: { labels: { color: muted, font: { size: 11 } } },
     },
     scales: {
       x: {
-        title: { display: true, text: xLabel, color: "#94a3b8" },
-        ticks: { color: "#94a3b8", maxRotation: 30 },
-        grid: { color: "rgba(30,48,80,0.5)" },
+        title: { display: true, text: xLabel, color: muted },
+        ticks: { color: muted, maxRotation: 30 },
+        grid: { color: grid + "80" },
       },
       y: {
-        title: { display: true, text: yLabel, color: "#94a3b8" },
-        ticks: { color: "#94a3b8" },
-        grid: { color: "rgba(30,48,80,0.5)" },
+        title: { display: true, text: yLabel, color: muted },
+        ticks: { color: muted },
+        grid: { color: grid + "80" },
         beginAtZero: true,
       },
     },

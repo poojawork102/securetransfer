@@ -1,4 +1,4 @@
-"""16-bit Internet checksum mode, protocol v1 compatibility and the word-swap error pattern."""
+"""16-bit Internet checksum mode, protocol v2 and the word-swap error pattern."""
 import os
 import random
 import shutil
@@ -16,7 +16,6 @@ from proxy import Proxy, swap_words  # noqa: E402
 from server import FileServer  # noqa: E402
 
 telemetry.disable()
-KEY = b"checksum-key"
 
 
 def frame_from_bytes(raw: bytes) -> P.Frame:
@@ -31,7 +30,6 @@ def frame_from_bytes(raw: bytes) -> P.Frame:
 
 class TestInternetChecksum(unittest.TestCase):
     def test_rfc1071_example(self):
-        # RFC 1071 section 3: words 0001 f203 f4f5 f6f7 sum to ddf2 (after end-around carry)
         self.assertEqual(P.internet_checksum16(bytes.fromhex("0001f203f4f5f6f7")), 0x220D)
 
     def test_receiver_sum_is_all_ones(self):
@@ -40,7 +38,7 @@ class TestInternetChecksum(unittest.TestCase):
             data = rng.randbytes(n)
             data += b"\x00" * (len(data) % 2)
             c = P.internet_checksum16(data)
-            self.assertEqual(P.internet_checksum16(data + c.to_bytes(2, "big")), 0)   # complement of all-ones
+            self.assertEqual(P.internet_checksum16(data + c.to_bytes(2, "big")), 0)
 
     def test_odd_length_is_zero_padded(self):
         self.assertEqual(P.internet_checksum16(b"\x12\x34\x56"), P.internet_checksum16(b"\x12\x34\x56\x00"))
@@ -57,12 +55,11 @@ class TestInternetChecksum(unittest.TestCase):
 class TestChecksumFrames(unittest.TestCase):
     def test_roundtrip_all_flag_combinations(self):
         data = os.urandom(777)
-        for h in (False, True):
-            for f in (False, True):
-                for chk in P.CHECK_MODES:
-                    fr = frame_from_bytes(P.build_frame(P.DATA, 9, data, use_hmac=h, use_fec=f, key=KEY, check=chk))
-                    self.assertEqual(fr.check_name, chk)
-                    self.assertEqual(P.open_frame(fr, KEY)[:2], (data, P.OK))
+        for f in (False, True):
+            for chk in P.CHECK_MODES:
+                fr = frame_from_bytes(P.build_frame(P.DATA, 9, data, use_fec=f, check=chk))
+                self.assertEqual(fr.check_name, chk)
+                self.assertEqual(P.open_frame(fr)[:2], (data, P.OK))
 
     def test_check_field_is_16_bit_and_flag_is_set(self):
         fr = frame_from_bytes(P.build_frame(P.DATA, 0, b"hello world!", check="checksum16"))
@@ -93,15 +90,6 @@ class TestChecksumFrames(unittest.TestCase):
         self.assertEqual(fr.version, 1)
         self.assertEqual(P.open_frame(fr)[:2], (data, P.OK))
 
-    def test_version_1_with_hmac_verifies_against_its_own_header(self):
-        data = b"legacy frame" * 10
-        flags = P.FLAG_HMAC
-        header = P.pack_header(P.DATA, flags, 3, len(data), P.crc32(data), version=1)
-        raw = header + P.compute_hmac(KEY, header, data) + data
-        fr = frame_from_bytes(raw)
-        self.assertEqual(P.open_frame(fr, KEY)[1], P.OK)
-        self.assertEqual(fr.to_bytes(), raw)                 # re-serialising keeps it a v1 frame
-
     def test_future_version_rejected(self):
         raw = bytearray(P.build_frame(P.ACK, 0))
         raw[2] = 9
@@ -110,7 +98,7 @@ class TestChecksumFrames(unittest.TestCase):
 
     def test_hamming_fix_details_report_syndrome(self):
         enc = bytearray(P.hamming_encode(b"ABCD"))
-        enc[3] ^= 1 << 1                                     # flip bit 1 of codeword #3 -> position 6
+        enc[3] ^= 1 << 1
         fixes = P.hamming_fix_details(bytes(enc))
         self.assertEqual(fixes, [{"codeword": 3, "byte": 1, "nibble": 1, "syndrome": 6, "wire_bit": 1}])
 
@@ -121,7 +109,7 @@ class TestWordSwap(unittest.TestCase):
         swapped, info = swap_words(data, random.Random(4))
         self.assertIsNotNone(info)
         self.assertNotEqual(swapped, data)
-        self.assertEqual(P.internet_checksum16(swapped), P.internet_checksum16(data))     # sum unchanged
+        self.assertEqual(P.internet_checksum16(swapped), P.internet_checksum16(data))
         self.assertNotEqual(P.crc32(swapped), P.crc32(data))
 
     def test_swap_needs_two_different_words(self):
@@ -132,8 +120,7 @@ class TestWordSwap(unittest.TestCase):
 class TestSwapThroughProxy(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
-        self.server = FileServer(port=0, out_dir=os.path.join(self.tmp, "r"), key=KEY, quiet=True,
-                                 quarantine_dir=os.path.join(self.tmp, "q")).start(background=True)
+        self.server = FileServer(port=0, out_dir=os.path.join(self.tmp, "r"), quiet=True).start(background=True)
         self.proxy = Proxy(0, server_port=self.server.port, control_port=None, seed=11, quiet=True,
                            mode="noise", rate=0.3, pattern="swap").start(background=True)
         self.file = os.path.join(self.tmp, "src.bin")
@@ -147,11 +134,11 @@ class TestSwapThroughProxy(unittest.TestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def send(self, **kw):
-        return client.send_file(self.file, "127.0.0.1", self.proxy.listen_port, key=KEY, quiet=True, **kw)
+        return client.send_file(self.file, "127.0.0.1", self.proxy.listen_port, quiet=True, **kw)
 
     def test_checksum_is_fooled_by_reordering(self):
         s = self.send(check="checksum16")
-        self.assertFalse(s["verified"])                      # corrupted file got through every chunk check
+        self.assertFalse(s["verified"])
         self.assertEqual(s["retransmits"], 0)
         self.assertEqual(s["server_stats"]["checksum_fail"], 0)
 

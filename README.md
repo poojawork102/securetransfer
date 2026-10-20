@@ -18,12 +18,10 @@ retransmits it. Hamming(7,4) forward error correction can repair single-bit erro
 without retransmission. CRC32 is available as a stronger detector for comparison.
 A SHA-256 hash of the whole file is checked at the end.
 
-A man-in-the-middle proxy sits between client and server to inject errors, and a
-React + Flask dashboard visualises the transfer live in 3D.
+A proxy sits between client and server to inject bit errors (noise) or word swaps,
+and a React + Flask dashboard visualises the transfer live.
 
 ## Architecture
-
-![Architecture](docs/diagrams/architecture.png)
 
 ```
 Client :8000 --> Proxy (channel) :9000 --> Server
@@ -48,8 +46,6 @@ npm install
 npm run build
 cd ..
 ```
-
-Or on Windows, run `start.bat` which does everything and opens the browser.
 
 ## Running
 
@@ -76,8 +72,8 @@ python client.py sample_files/sample.txt --fec
 python client.py sample_files/sample.txt --check crc32
 ```
 
-Client flags: `--fec`, `--hmac`, `--auto`, `--check checksum16|crc32`, `--chunk 1024`.
-Proxy flags: `--mode clean|noise|attack`, `--rate 0.2`, `--bits 1`, `--loss 0.05`.
+Client flags: `--fec`, `--check checksum16|crc32`, `--chunk 1024`.
+Proxy flags: `--mode clean|noise`, `--rate 0.2`, `--bits 1`, `--loss 0.05`.
 
 ## Demo (5 minutes)
 
@@ -98,7 +94,7 @@ See `docs/DEMO_SCRIPT.md` for the full script.
 python -m pytest tests/ -v
 ```
 
-102 tests across 5 files: protocol, integration, adaptive, checksum, numericals.
+67 tests across 4 files: protocol, integration, checksum, numericals.
 See `docs/TEST_REPORT.md`.
 
 ## Performance
@@ -107,8 +103,8 @@ See `docs/TEST_REPORT.md`.
 python bench.py
 ```
 
-7 experiments: error rate sweep, chunk size scaling, latency, attack, adaptive defense,
-detection power (checksum vs CRC32), frame loss. Results in `results/`.
+5 experiments: error rate sweep, chunk size, latency, detection power (checksum vs CRC32),
+frame loss. Results in `results/`.
 
 Key findings:
 - Checksum + ARQ throughput drops 50% at 50% error rate.
@@ -124,9 +120,8 @@ Real captures go in `captures/`.
 ## Limitations
 
 - Stop-and-wait is slow on high-latency links. Go-Back-N would improve throughput.
-- The HMAC key is pre-shared. A real system would use TLS.
 - Hamming(7,4) corrects only 1 bit per codeword. Real links use stronger codes.
-- HMAC gives integrity, not confidentiality: data is readable in Wireshark.
+- Data is not encrypted: it is readable in Wireshark. A real system would use TLS.
 - Mininet topology is not implemented.
 
 ## References
@@ -134,5 +129,4 @@ Real captures go in `captures/`.
 1. RFC 793, Transmission Control Protocol.
 2. RFC 1071, Computing the Internet Checksum.
 3. R. W. Hamming, "Error Detecting and Error Correcting Codes," 1950.
-4. RFC 2104, HMAC: Keyed-Hashing for Message Authentication.
-5. FIPS 180-4, Secure Hash Standard (SHA-256).
+4. FIPS 180-4, Secure Hash Standard (SHA-256).

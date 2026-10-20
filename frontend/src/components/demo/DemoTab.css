@@ -53,7 +53,7 @@
 
 .objective-card:hover:not(:disabled) {
   border-color: var(--accent);
-  background: rgba(34, 211, 238, 0.04);
+  background: var(--bg-input);
 }
 
 .objective-card:disabled {
@@ -166,6 +166,16 @@
   font-family: var(--font);
 }
 
+.custom-form input[type="file"] {
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.custom-form input[type="range"] {
+  accent-color: var(--accent);
+  width: 100%;
+}
+
 .checkbox-label {
   flex-direction: row !important;
   align-items: center;
@@ -198,11 +208,21 @@
   opacity: 0.9;
 }
 
+/* compare cards (O4 dual-run) */
+.compare-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
 @media (max-width: 768px) {
   .demo-tab {
     grid-template-columns: 1fr;
   }
   .objective-cards {
+    grid-template-columns: 1fr;
+  }
+  .compare-cards {
     grid-template-columns: 1fr;
   }
 }

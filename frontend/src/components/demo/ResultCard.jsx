@@ -2,12 +2,18 @@ import { useState } from "react";
 import { COLORS } from "../../utils/constants";
 import "./ResultCard.css";
 
-export default function ResultCard({ result, objective, completed, chunks }) {
+export default function ResultCard({ result, objective, completed, chunks, label }) {
   const [whyOpen, setWhyOpen] = useState(false);
   const verified = result.verified;
 
+  const nacked = chunks.filter((c) => c.status === "nacked").length;
+  const corrected = chunks.filter((c) => c.status === "corrected").length;
+  const accepted = chunks.filter((c) => c.status === "accepted").length;
+  const total = chunks.length;
+
   return (
     <div className={`result-card card ${verified ? "verified" : "rejected"}`}>
+      {label && <p className="result-run-label">{label}</p>}
       <h2 className="result-title">{verified ? "VERIFIED" : "REJECTED"}</h2>
 
       {objective && (
@@ -28,6 +34,12 @@ export default function ResultCard({ result, objective, completed, chunks }) {
           SHA-256 {verified ? "match" : "mismatch"}
         </span>
       </div>
+      {total > 0 && (
+        <div className="result-row">
+          <span className="result-label">Chunks</span>
+          <span>{total} total, {nacked} retransmitted, {corrected} corrected, {accepted} accepted</span>
+        </div>
+      )}
       {objective && (
         <div className="result-row">
           <span className="result-label">Objective met</span>
@@ -42,7 +54,7 @@ export default function ResultCard({ result, objective, completed, chunks }) {
         <p className="muted">
           {verified
             ? "Every chunk passed the error check. The SHA-256 hash of the received file matches the hash sent in the META frame, confirming no data was lost or altered."
-            : "One or more chunks were corrupted and the error was not corrected. The SHA-256 hash of the received file does not match the original, so the file was quarantined."}
+            : "One or more chunks were corrupted and the error was not corrected. The SHA-256 hash of the received file does not match the original, so the file was rejected."}
         </p>
       </details>
 

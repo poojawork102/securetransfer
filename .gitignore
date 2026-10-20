@@ -7,9 +7,7 @@ received/*
 uploads/
 *.pcapng
 .DS_Store
-quarantine/*
-!quarantine/.gitkeep
 received/.incoming/
 frontend/node_modules/
-frontend/dist/
+demo_files/
 .pytest_cache/

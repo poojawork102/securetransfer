@@ -60,9 +60,9 @@ export default function HowItWorksTab() {
       <section className="card">
         <h3>Frame format (17 bytes, big-endian)</h3>
         <div className="diagram-container">
-          <svg viewBox="0 0 800 120" className="frame-svg" role="img" aria-label="Frame format: 2-byte magic FT, 1-byte version, 1-byte type, 1-byte flags, 4-byte sequence, 4-byte length, 4-byte check value, optional 32-byte HMAC, variable-length payload">
+          <svg viewBox="0 0 800 120" className="frame-svg" role="img" aria-label="Frame format: 2-byte magic FT, 1-byte version, 1-byte type, 1-byte flags, 4-byte sequence, 4-byte length, 4-byte check value, variable-length payload">
             {/* Byte offset labels */}
-            {[0,2,3,4,5,9,13,17].map((off, i, arr) => (
+            {[0,2,3,4,5,9,13,17].map((off) => (
               <text key={off} x={20 + (off / 17) * 700} y="20" textAnchor="middle" fill="var(--text-muted)" fontSize="10">{off}</text>
             ))}
             {/* Field boxes */}
@@ -87,12 +87,9 @@ export default function HowItWorksTab() {
             <rect x="555" y="30" width={165} height="40" rx="4" fill="rgba(34,211,238,0.1)" stroke="var(--accent)" strokeWidth="1" />
             <text x="637" y="55" textAnchor="middle" fill="var(--text)" fontSize="10">CHECK (4 B)</text>
 
-            {/* Below: optional HMAC + payload */}
-            <rect x="20" y="80" width="350" height="30" rx="4" fill="rgba(168,85,247,0.1)" stroke="var(--purple)" strokeWidth="1" strokeDasharray="4 3" />
-            <text x="195" y="100" textAnchor="middle" fill="var(--purple)" fontSize="10">HMAC-SHA256 (32 B, if FLAGS bit 0)</text>
-
-            <rect x="380" y="80" width="340" height="30" rx="4" fill="rgba(34,197,94,0.1)" stroke="var(--green)" strokeWidth="1" />
-            <text x="550" y="100" textAnchor="middle" fill="var(--green)" fontSize="10">PAYLOAD (LEN bytes)</text>
+            {/* Payload */}
+            <rect x="20" y="80" width="700" height="30" rx="4" fill="rgba(34,197,94,0.1)" stroke="var(--green)" strokeWidth="1" />
+            <text x="370" y="100" textAnchor="middle" fill="var(--green)" fontSize="10">PAYLOAD (LEN bytes)</text>
           </svg>
         </div>
       </section>

@@ -6,22 +6,15 @@ export default function StepList({ steps, label }) {
   if (visible.length === 0) return null;
 
   return (
-    <div className="flow-section">
-      <h4 className="flow-label">{label}</h4>
-      <div className="flow-track">
+    <div className="step-section">
+      <h4 className="step-section-label">{label}</h4>
+      <ol className="step-list">
         {visible.map((step, i) => (
-          <div className="flow-item" key={i}>
-            {i > 0 && (
-              <div className="flow-arrow-h">
-                <svg width="24" height="20" viewBox="0 0 24 20">
-                  <path d="M0 10 L18 10 M14 5 L20 10 L14 15" stroke="var(--accent)" strokeWidth="1.5" fill="none" opacity="0.35" />
-                </svg>
-              </div>
-            )}
+          <li className="step-item" key={i}>
             <StepCard step={step} index={i} />
-          </div>
+          </li>
         ))}
-      </div>
+      </ol>
     </div>
   );
 }
@@ -37,16 +30,16 @@ function StepCard({ step, index }) {
     title.toLowerCase().includes("result");
 
   return (
-    <div className={`flow-card ${isResult ? "flow-card-result" : ""}`}>
-      <div className="flow-card-header">
-        <span className="flow-card-num">{index + 1}</span>
-        <span className="flow-card-title">{title}</span>
+    <div className={`step-card ${isResult ? "step-card-result" : ""}`}>
+      <div className="step-card-header">
+        <span className="step-card-num">{index + 1}</span>
+        <span className="step-card-title">{title}</span>
       </div>
-      {hasText && <p className="flow-card-text">{step.text}</p>}
+      {hasText && <p className="step-card-text">{step.text}</p>}
       {hasRows && (
-        <div className="flow-card-rows">
+        <div className="step-card-rows">
           {step.rows.map((row, j) => (
-            <FlowRow key={j} row={row} />
+            <StepRow key={j} row={row} />
           ))}
         </div>
       )}
@@ -54,7 +47,7 @@ function StepCard({ step, index }) {
   );
 }
 
-function FlowRow({ row }) {
+function StepRow({ row }) {
   const bits = row.bits || "";
   const isSeparator = /^-+$/.test(bits.trim());
   const isFormula = bits.includes("=") || bits.includes("→") || bits.includes("⊕");
@@ -62,17 +55,17 @@ function FlowRow({ row }) {
     row.label === "covered" || row.label === "bit" || row.label === "codeword" || row.label === "sent");
 
   if (isSeparator) {
-    return <div className="flow-row-sep" />;
+    return <div className="step-row-sep" />;
   }
 
   if (isTable) {
     const cells = bits.trim().split(/\s{2,}|\s+/);
     return (
-      <div className="flow-table-row">
-        {row.label && <span className="flow-table-label">{row.label}</span>}
-        <div className="flow-table-cells">
+      <div className="step-table-row">
+        {row.label && <span className="step-table-label">{row.label}</span>}
+        <div className="step-table-cells">
           {cells.map((c, i) => (
-            <span key={i} className={`flow-table-cell ${
+            <span key={i} className={`step-table-cell ${
               c.startsWith("P") ? "cell-parity" :
               c.startsWith("D") ? "cell-data" :
               c === "•" ? "cell-dot" : ""
@@ -85,19 +78,19 @@ function FlowRow({ row }) {
 
   if (isFormula) {
     return (
-      <div className="flow-formula">
+      <div className="step-formula">
         <code>{bits}</code>
       </div>
     );
   }
 
   return (
-    <div className="flow-row" style={row.indent ? { paddingLeft: row.indent * 8 } : undefined}>
-      {row.label && <span className="flow-row-label">{row.label}</span>}
-      <span className={`flow-row-bits ${row.cls === "gen" ? "gen" : ""}`}>
+    <div className="step-row" style={row.indent ? { paddingLeft: row.indent * 8 } : undefined}>
+      {row.label && <span className="step-row-label">{row.label}</span>}
+      <span className={`step-row-bits ${row.cls === "gen" ? "gen" : ""}`}>
         {bits}
       </span>
-      {row.note && <span className="flow-row-note">{row.note}</span>}
+      {row.note && <span className="step-row-note">{row.note}</span>}
     </div>
   );
 }

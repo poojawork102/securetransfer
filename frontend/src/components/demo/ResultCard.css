@@ -2,6 +2,15 @@
   border-left: 4px solid var(--border);
 }
 
+.result-run-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
 .result-card.verified { border-left-color: var(--green); }
 .result-card.rejected { border-left-color: var(--red); }
 
