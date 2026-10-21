@@ -53,8 +53,11 @@ def trial(px, f, repeats=REPEATS, chunk=1024, **proxy_state):
                               quiet=True, max_retries=30, timeout=timeout, check=check))
     avg = lambda k: round(statistics.mean(r[k] for r in runs), 3)          # noqa: E731
     srv = lambda k: round(statistics.mean(r["server_stats"].get(k, 0) for r in runs), 2)  # noqa: E731
+    overhead = round(statistics.mean(
+        100 * (r["bytes_on_wire"] - r["size"]) / max(r["size"], 1) for r in runs
+    ), 2)
     return {"throughput_kbps": avg("throughput_kbps"), "elapsed_s": avg("elapsed_s"), "avg_rtt_ms": avg("avg_rtt_ms"),
-            "retransmits": avg("retransmits"), "overhead_pct": avg("overhead_pct"),
+            "retransmits": avg("retransmits"), "overhead_pct": overhead,
             "crc_fail": srv("crc_fail"), "checksum_fail": srv("checksum_fail"),
             "corrected": srv("corrected"), "timeouts": avg("timeouts"),
             "verified_pct": round(100 * sum(r["verified"] for r in runs) / len(runs), 1)}
