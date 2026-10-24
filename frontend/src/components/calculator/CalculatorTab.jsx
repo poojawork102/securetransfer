@@ -10,8 +10,13 @@ const SOLVERS = [
   { id: "crc", label: "CRC" },
 ];
 
-export default function CalculatorTab() {
+export default function CalculatorTab({ prefill, onPrefillUsed }) {
   const [solver, setSolver] = useState("checksum");
+
+  const activeSolver = prefill?.solver || solver;
+  if (prefill?.solver && prefill.solver !== solver) {
+    setSolver(prefill.solver);
+  }
 
   return (
     <div className="calculator">
@@ -19,7 +24,7 @@ export default function CalculatorTab() {
         {SOLVERS.map((s) => (
           <button
             key={s.id}
-            className={`solver-tab ${solver === s.id ? "active" : ""}`}
+            className={`solver-tab ${activeSolver === s.id ? "active" : ""}`}
             onClick={() => setSolver(s.id)}
           >
             {s.label}
@@ -27,9 +32,9 @@ export default function CalculatorTab() {
         ))}
       </div>
       <div className="solver-content card">
-        {solver === "checksum" && <ChecksumSolver />}
-        {solver === "hamming" && <HammingSolver />}
-        {solver === "crc" && <CrcSolver />}
+        {activeSolver === "checksum" && <ChecksumSolver prefill={prefill?.solver === "checksum" ? prefill : null} onPrefillUsed={onPrefillUsed} />}
+        {activeSolver === "hamming" && <HammingSolver prefill={prefill?.solver === "hamming" ? prefill : null} onPrefillUsed={onPrefillUsed} />}
+        {activeSolver === "crc" && <CrcSolver prefill={prefill?.solver === "crc" ? prefill : null} onPrefillUsed={onPrefillUsed} />}
       </div>
     </div>
   );

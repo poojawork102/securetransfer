@@ -1,0 +1,1052 @@
+[
+  {
+    "ts": 1700000027,
+    "user": "student02",
+    "event": "login",
+    "status": "fail",
+    "bytes": 34937
+  },
+  {
+    "ts": 1700000083,
+    "user": "admin",
+    "event": "download",
+    "status": "fail",
+    "bytes": 44669
+  },
+  {
+    "ts": 1700000110,
+    "user": "student01",
+    "event": "logout",
+    "status": "fail",
+    "bytes": 43751
+  },
+  {
+    "ts": 1700000236,
+    "user": "student01",
+    "event": "login",
+    "status": "fail",
+    "bytes": 11483
+  },
+  {
+    "ts": 1700000430,
+    "user": "admin",
+    "event": "login",
+    "status": "fail",
+    "bytes": 58762
+  },
+  {
+    "ts": 1700000483,
+    "user": "admin",
+    "event": "login",
+    "status": "ok",
+    "bytes": 16547
+  },
+  {
+    "ts": 1700000494,
+    "user": "student02",
+    "event": "download",
+    "status": "fail",
+    "bytes": 34776
+  },
+  {
+    "ts": 1700000735,
+    "user": "admin",
+    "event": "upload",
+    "status": "fail",
+    "bytes": 63302
+  },
+  {
+    "ts": 1700000841,
+    "user": "student02",
+    "event": "login",
+    "status": "fail",
+    "bytes": 56935
+  },
+  {
+    "ts": 1700001117,
+    "user": "guest",
+    "event": "error",
+    "status": "fail",
+    "bytes": 49089
+  },
+  {
+    "ts": 1700001379,
+    "user": "admin",
+    "event": "timeout",
+    "status": "ok",
+    "bytes": 10827
+  },
+  {
+    "ts": 1700001629,
+    "user": "student02",
+    "event": "logout",
+    "status": "fail",
+    "bytes": 44160
+  },
+  {
+    "ts": 1700001913,
+    "user": "guest",
+    "event": "login",
+    "status": "fail",
+    "bytes": 50810
+  },
+  {
+    "ts": 1700002207,
+    "user": "student02",
+    "event": "login",
+    "status": "ok",
+    "bytes": 11554
+  },
+  {
+    "ts": 1700002394,
+    "user": "admin",
+    "event": "upload",
+    "status": "ok",
+    "bytes": 53178
+  },
+  {
+    "ts": 1700002667,
+    "user": "admin",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 64851
+  },
+  {
+    "ts": 1700002787,
+    "user": "guest",
+    "event": "logout",
+    "status": "ok",
+    "bytes": 58261
+  },
+  {
+    "ts": 1700002981,
+    "user": "guest",
+    "event": "login",
+    "status": "ok",
+    "bytes": 17659
+  },
+  {
+    "ts": 1700003215,
+    "user": "student01",
+    "event": "login",
+    "status": "fail",
+    "bytes": 46143
+  },
+  {
+    "ts": 1700003355,
+    "user": "guest",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 46
+  },
+  {
+    "ts": 1700003411,
+    "user": "admin",
+    "event": "error",
+    "status": "fail",
+    "bytes": 11637
+  },
+  {
+    "ts": 1700003454,
+    "user": "guest",
+    "event": "login",
+    "status": "fail",
+    "bytes": 9631
+  },
+  {
+    "ts": 1700003734,
+    "user": "guest",
+    "event": "login",
+    "status": "fail",
+    "bytes": 34411
+  },
+  {
+    "ts": 1700003976,
+    "user": "admin",
+    "event": "error",
+    "status": "fail",
+    "bytes": 54273
+  },
+  {
+    "ts": 1700004155,
+    "user": "admin",
+    "event": "timeout",
+    "status": "ok",
+    "bytes": 54924
+  },
+  {
+    "ts": 1700004188,
+    "user": "student01",
+    "event": "upload",
+    "status": "ok",
+    "bytes": 10272
+  },
+  {
+    "ts": 1700004218,
+    "user": "guest",
+    "event": "error",
+    "status": "fail",
+    "bytes": 19154
+  },
+  {
+    "ts": 1700004368,
+    "user": "guest",
+    "event": "upload",
+    "status": "ok",
+    "bytes": 44266
+  },
+  {
+    "ts": 1700004633,
+    "user": "admin",
+    "event": "timeout",
+    "status": "ok",
+    "bytes": 50626
+  },
+  {
+    "ts": 1700004855,
+    "user": "admin",
+    "event": "timeout",
+    "status": "ok",
+    "bytes": 59603
+  },
+  {
+    "ts": 1700004866,
+    "user": "student02",
+    "event": "download",
+    "status": "fail",
+    "bytes": 39820
+  },
+  {
+    "ts": 1700005086,
+    "user": "admin",
+    "event": "logout",
+    "status": "fail",
+    "bytes": 18005
+  },
+  {
+    "ts": 1700005262,
+    "user": "admin",
+    "event": "error",
+    "status": "fail",
+    "bytes": 29478
+  },
+  {
+    "ts": 1700005554,
+    "user": "student02",
+    "event": "login",
+    "status": "fail",
+    "bytes": 31881
+  },
+  {
+    "ts": 1700005659,
+    "user": "student02",
+    "event": "upload",
+    "status": "fail",
+    "bytes": 5639
+  },
+  {
+    "ts": 1700005916,
+    "user": "admin",
+    "event": "logout",
+    "status": "ok",
+    "bytes": 2249
+  },
+  {
+    "ts": 1700006016,
+    "user": "student02",
+    "event": "error",
+    "status": "ok",
+    "bytes": 11154
+  },
+  {
+    "ts": 1700006179,
+    "user": "admin",
+    "event": "upload",
+    "status": "ok",
+    "bytes": 17753
+  },
+  {
+    "ts": 1700006427,
+    "user": "guest",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 3699
+  },
+  {
+    "ts": 1700006559,
+    "user": "guest",
+    "event": "upload",
+    "status": "fail",
+    "bytes": 29379
+  },
+  {
+    "ts": 1700006816,
+    "user": "student01",
+    "event": "error",
+    "status": "ok",
+    "bytes": 64811
+  },
+  {
+    "ts": 1700006992,
+    "user": "admin",
+    "event": "timeout",
+    "status": "ok",
+    "bytes": 47270
+  },
+  {
+    "ts": 1700007228,
+    "user": "student02",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 41354
+  },
+  {
+    "ts": 1700007412,
+    "user": "student01",
+    "event": "download",
+    "status": "fail",
+    "bytes": 25227
+  },
+  {
+    "ts": 1700007505,
+    "user": "guest",
+    "event": "login",
+    "status": "fail",
+    "bytes": 49195
+  },
+  {
+    "ts": 1700007762,
+    "user": "student02",
+    "event": "logout",
+    "status": "fail",
+    "bytes": 48302
+  },
+  {
+    "ts": 1700007798,
+    "user": "student02",
+    "event": "login",
+    "status": "fail",
+    "bytes": 42235
+  },
+  {
+    "ts": 1700007827,
+    "user": "guest",
+    "event": "login",
+    "status": "fail",
+    "bytes": 39126
+  },
+  {
+    "ts": 1700007883,
+    "user": "guest",
+    "event": "error",
+    "status": "fail",
+    "bytes": 31807
+  },
+  {
+    "ts": 1700008112,
+    "user": "student02",
+    "event": "download",
+    "status": "fail",
+    "bytes": 32560
+  },
+  {
+    "ts": 1700008346,
+    "user": "student02",
+    "event": "upload",
+    "status": "ok",
+    "bytes": 23882
+  },
+  {
+    "ts": 1700008410,
+    "user": "admin",
+    "event": "download",
+    "status": "fail",
+    "bytes": 17287
+  },
+  {
+    "ts": 1700008655,
+    "user": "admin",
+    "event": "download",
+    "status": "ok",
+    "bytes": 42708
+  },
+  {
+    "ts": 1700008845,
+    "user": "student01",
+    "event": "error",
+    "status": "ok",
+    "bytes": 60739
+  },
+  {
+    "ts": 1700009104,
+    "user": "student02",
+    "event": "timeout",
+    "status": "ok",
+    "bytes": 42024
+  },
+  {
+    "ts": 1700009302,
+    "user": "student01",
+    "event": "timeout",
+    "status": "ok",
+    "bytes": 33208
+  },
+  {
+    "ts": 1700009448,
+    "user": "student01",
+    "event": "download",
+    "status": "fail",
+    "bytes": 55702
+  },
+  {
+    "ts": 1700009471,
+    "user": "admin",
+    "event": "download",
+    "status": "ok",
+    "bytes": 25983
+  },
+  {
+    "ts": 1700009495,
+    "user": "student02",
+    "event": "error",
+    "status": "ok",
+    "bytes": 25435
+  },
+  {
+    "ts": 1700009651,
+    "user": "guest",
+    "event": "download",
+    "status": "ok",
+    "bytes": 37020
+  },
+  {
+    "ts": 1700009922,
+    "user": "admin",
+    "event": "login",
+    "status": "fail",
+    "bytes": 36608
+  },
+  {
+    "ts": 1700010022,
+    "user": "admin",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 53269
+  },
+  {
+    "ts": 1700010252,
+    "user": "admin",
+    "event": "login",
+    "status": "fail",
+    "bytes": 57148
+  },
+  {
+    "ts": 1700010517,
+    "user": "student02",
+    "event": "logout",
+    "status": "fail",
+    "bytes": 17637
+  },
+  {
+    "ts": 1700010617,
+    "user": "student01",
+    "event": "logout",
+    "status": "ok",
+    "bytes": 32044
+  },
+  {
+    "ts": 1700010724,
+    "user": "admin",
+    "event": "download",
+    "status": "ok",
+    "bytes": 1436
+  },
+  {
+    "ts": 1700010936,
+    "user": "student02",
+    "event": "error",
+    "status": "ok",
+    "bytes": 5484
+  },
+  {
+    "ts": 1700011063,
+    "user": "guest",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 24369
+  },
+  {
+    "ts": 1700011219,
+    "user": "admin",
+    "event": "upload",
+    "status": "fail",
+    "bytes": 27788
+  },
+  {
+    "ts": 1700011483,
+    "user": "admin",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 20037
+  },
+  {
+    "ts": 1700011722,
+    "user": "student01",
+    "event": "download",
+    "status": "ok",
+    "bytes": 56964
+  },
+  {
+    "ts": 1700011923,
+    "user": "student01",
+    "event": "download",
+    "status": "ok",
+    "bytes": 65134
+  },
+  {
+    "ts": 1700011945,
+    "user": "student02",
+    "event": "logout",
+    "status": "fail",
+    "bytes": 14003
+  },
+  {
+    "ts": 1700012010,
+    "user": "admin",
+    "event": "download",
+    "status": "fail",
+    "bytes": 2283
+  },
+  {
+    "ts": 1700012238,
+    "user": "student02",
+    "event": "upload",
+    "status": "fail",
+    "bytes": 27967
+  },
+  {
+    "ts": 1700012438,
+    "user": "admin",
+    "event": "login",
+    "status": "ok",
+    "bytes": 42580
+  },
+  {
+    "ts": 1700012481,
+    "user": "student01",
+    "event": "download",
+    "status": "ok",
+    "bytes": 54891
+  },
+  {
+    "ts": 1700012546,
+    "user": "guest",
+    "event": "logout",
+    "status": "ok",
+    "bytes": 21307
+  },
+  {
+    "ts": 1700012591,
+    "user": "student02",
+    "event": "login",
+    "status": "ok",
+    "bytes": 19190
+  },
+  {
+    "ts": 1700012704,
+    "user": "guest",
+    "event": "download",
+    "status": "ok",
+    "bytes": 53040
+  },
+  {
+    "ts": 1700012735,
+    "user": "admin",
+    "event": "logout",
+    "status": "ok",
+    "bytes": 60468
+  },
+  {
+    "ts": 1700012782,
+    "user": "student01",
+    "event": "timeout",
+    "status": "ok",
+    "bytes": 47046
+  },
+  {
+    "ts": 1700013008,
+    "user": "student01",
+    "event": "logout",
+    "status": "ok",
+    "bytes": 56531
+  },
+  {
+    "ts": 1700013183,
+    "user": "student01",
+    "event": "login",
+    "status": "ok",
+    "bytes": 38231
+  },
+  {
+    "ts": 1700013351,
+    "user": "guest",
+    "event": "upload",
+    "status": "ok",
+    "bytes": 7979
+  },
+  {
+    "ts": 1700013381,
+    "user": "admin",
+    "event": "login",
+    "status": "ok",
+    "bytes": 37757
+  },
+  {
+    "ts": 1700013502,
+    "user": "student01",
+    "event": "error",
+    "status": "ok",
+    "bytes": 34506
+  },
+  {
+    "ts": 1700013718,
+    "user": "student02",
+    "event": "upload",
+    "status": "ok",
+    "bytes": 54639
+  },
+  {
+    "ts": 1700013736,
+    "user": "student02",
+    "event": "upload",
+    "status": "fail",
+    "bytes": 430
+  },
+  {
+    "ts": 1700013916,
+    "user": "admin",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 10470
+  },
+  {
+    "ts": 1700014110,
+    "user": "student01",
+    "event": "error",
+    "status": "fail",
+    "bytes": 58290
+  },
+  {
+    "ts": 1700014164,
+    "user": "student01",
+    "event": "download",
+    "status": "ok",
+    "bytes": 25123
+  },
+  {
+    "ts": 1700014270,
+    "user": "student02",
+    "event": "download",
+    "status": "fail",
+    "bytes": 37132
+  },
+  {
+    "ts": 1700014554,
+    "user": "student01",
+    "event": "download",
+    "status": "ok",
+    "bytes": 34126
+  },
+  {
+    "ts": 1700014570,
+    "user": "student01",
+    "event": "logout",
+    "status": "fail",
+    "bytes": 24117
+  },
+  {
+    "ts": 1700014622,
+    "user": "student01",
+    "event": "timeout",
+    "status": "ok",
+    "bytes": 35448
+  },
+  {
+    "ts": 1700014685,
+    "user": "admin",
+    "event": "upload",
+    "status": "ok",
+    "bytes": 33403
+  },
+  {
+    "ts": 1700014870,
+    "user": "student01",
+    "event": "upload",
+    "status": "fail",
+    "bytes": 12159
+  },
+  {
+    "ts": 1700015004,
+    "user": "admin",
+    "event": "timeout",
+    "status": "ok",
+    "bytes": 43226
+  },
+  {
+    "ts": 1700015151,
+    "user": "student02",
+    "event": "download",
+    "status": "ok",
+    "bytes": 701
+  },
+  {
+    "ts": 1700015199,
+    "user": "admin",
+    "event": "error",
+    "status": "ok",
+    "bytes": 57795
+  },
+  {
+    "ts": 1700015398,
+    "user": "student02",
+    "event": "timeout",
+    "status": "ok",
+    "bytes": 17341
+  },
+  {
+    "ts": 1700015597,
+    "user": "admin",
+    "event": "download",
+    "status": "ok",
+    "bytes": 31454
+  },
+  {
+    "ts": 1700015600,
+    "user": "guest",
+    "event": "logout",
+    "status": "ok",
+    "bytes": 22891
+  },
+  {
+    "ts": 1700015875,
+    "user": "student02",
+    "event": "download",
+    "status": "ok",
+    "bytes": 51135
+  },
+  {
+    "ts": 1700016032,
+    "user": "admin",
+    "event": "login",
+    "status": "ok",
+    "bytes": 51601
+  },
+  {
+    "ts": 1700016169,
+    "user": "admin",
+    "event": "timeout",
+    "status": "ok",
+    "bytes": 40675
+  },
+  {
+    "ts": 1700016329,
+    "user": "student02",
+    "event": "login",
+    "status": "ok",
+    "bytes": 40385
+  },
+  {
+    "ts": 1700016475,
+    "user": "student01",
+    "event": "download",
+    "status": "ok",
+    "bytes": 65207
+  },
+  {
+    "ts": 1700016499,
+    "user": "guest",
+    "event": "login",
+    "status": "ok",
+    "bytes": 22302
+  },
+  {
+    "ts": 1700016524,
+    "user": "student01",
+    "event": "login",
+    "status": "fail",
+    "bytes": 24880
+  },
+  {
+    "ts": 1700016730,
+    "user": "guest",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 9778
+  },
+  {
+    "ts": 1700016841,
+    "user": "admin",
+    "event": "download",
+    "status": "ok",
+    "bytes": 40823
+  },
+  {
+    "ts": 1700016857,
+    "user": "student01",
+    "event": "timeout",
+    "status": "ok",
+    "bytes": 20471
+  },
+  {
+    "ts": 1700017126,
+    "user": "admin",
+    "event": "timeout",
+    "status": "ok",
+    "bytes": 53973
+  },
+  {
+    "ts": 1700017368,
+    "user": "guest",
+    "event": "upload",
+    "status": "ok",
+    "bytes": 53045
+  },
+  {
+    "ts": 1700017588,
+    "user": "admin",
+    "event": "login",
+    "status": "ok",
+    "bytes": 28310
+  },
+  {
+    "ts": 1700017666,
+    "user": "student01",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 47813
+  },
+  {
+    "ts": 1700017928,
+    "user": "guest",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 37181
+  },
+  {
+    "ts": 1700018139,
+    "user": "student01",
+    "event": "error",
+    "status": "ok",
+    "bytes": 311
+  },
+  {
+    "ts": 1700018437,
+    "user": "student01",
+    "event": "error",
+    "status": "ok",
+    "bytes": 59512
+  },
+  {
+    "ts": 1700018564,
+    "user": "guest",
+    "event": "login",
+    "status": "fail",
+    "bytes": 38831
+  },
+  {
+    "ts": 1700018803,
+    "user": "student02",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 44384
+  },
+  {
+    "ts": 1700018905,
+    "user": "student01",
+    "event": "login",
+    "status": "fail",
+    "bytes": 6866
+  },
+  {
+    "ts": 1700019205,
+    "user": "admin",
+    "event": "download",
+    "status": "fail",
+    "bytes": 55230
+  },
+  {
+    "ts": 1700019296,
+    "user": "admin",
+    "event": "timeout",
+    "status": "ok",
+    "bytes": 30346
+  },
+  {
+    "ts": 1700019590,
+    "user": "guest",
+    "event": "logout",
+    "status": "ok",
+    "bytes": 63977
+  },
+  {
+    "ts": 1700019860,
+    "user": "student01",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 43941
+  },
+  {
+    "ts": 1700020022,
+    "user": "guest",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 44281
+  },
+  {
+    "ts": 1700020269,
+    "user": "student01",
+    "event": "logout",
+    "status": "ok",
+    "bytes": 6912
+  },
+  {
+    "ts": 1700020534,
+    "user": "student01",
+    "event": "upload",
+    "status": "ok",
+    "bytes": 18389
+  },
+  {
+    "ts": 1700020610,
+    "user": "student01",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 23439
+  },
+  {
+    "ts": 1700020896,
+    "user": "student01",
+    "event": "error",
+    "status": "ok",
+    "bytes": 63688
+  },
+  {
+    "ts": 1700021153,
+    "user": "admin",
+    "event": "download",
+    "status": "ok",
+    "bytes": 36266
+  },
+  {
+    "ts": 1700021333,
+    "user": "guest",
+    "event": "logout",
+    "status": "ok",
+    "bytes": 55951
+  },
+  {
+    "ts": 1700021575,
+    "user": "guest",
+    "event": "upload",
+    "status": "ok",
+    "bytes": 56279
+  },
+  {
+    "ts": 1700021789,
+    "user": "admin",
+    "event": "upload",
+    "status": "fail",
+    "bytes": 60796
+  },
+  {
+    "ts": 1700021797,
+    "user": "admin",
+    "event": "login",
+    "status": "fail",
+    "bytes": 47859
+  },
+  {
+    "ts": 1700021962,
+    "user": "student01",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 44715
+  },
+  {
+    "ts": 1700022082,
+    "user": "admin",
+    "event": "logout",
+    "status": "ok",
+    "bytes": 58823
+  },
+  {
+    "ts": 1700022186,
+    "user": "guest",
+    "event": "download",
+    "status": "ok",
+    "bytes": 45637
+  },
+  {
+    "ts": 1700022251,
+    "user": "student02",
+    "event": "upload",
+    "status": "fail",
+    "bytes": 9370
+  },
+  {
+    "ts": 1700022429,
+    "user": "student01",
+    "event": "login",
+    "status": "ok",
+    "bytes": 16847
+  },
+  {
+    "ts": 1700022694,
+    "user": "admin",
+    "event": "error",
+    "status": "fail",
+    "bytes": 55107
+  },
+  {
+    "ts": 1700022899,
+    "user": "guest",
+    "event": "login",
+    "status": "ok",
+    "bytes": 24045
+  },
+  {
+    "ts": 1700023078,
+    "user": "student01",
+    "event": "upload",
+    "status": "fail",
+    "bytes": 64002
+  },
+  {
+    "ts": 1700023138,
+    "user": "guest",
+    "event": "login",
+    "status": "fail",
+    "bytes": 49226
+  },
+  {
+    "ts": 1700023191,
+    "user": "student01",
+    "event": "upload",
+    "status": "ok",
+    "bytes": 15866
+  },
+  {
+    "ts": 1700023380,
+    "user": "student01",
+    "event": "logout",
+    "status": "ok",
+    "bytes": 8571
+  },
+  {
+    "ts": 1700023597,
+    "user": "guest",
+    "event": "timeout",
+    "status": "fail",
+    "bytes": 58638
+  }
+]

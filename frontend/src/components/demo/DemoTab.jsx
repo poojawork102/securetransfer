@@ -6,7 +6,7 @@ import { OBJECTIVES } from "../../utils/constants";
 import { sendFile, setProxy, getSamples } from "../../utils/api";
 import "./DemoTab.css";
 
-export default function DemoTab({ socket, onStateChange }) {
+export default function DemoTab({ socket, onStateChange, onOpenCalculator }) {
   const [running, setRunning] = useState(false);
   const [completed, setCompleted] = useState({});
   const [activeObj, setActiveObj] = useState(null);
@@ -15,9 +15,10 @@ export default function DemoTab({ socket, onStateChange }) {
   const [happenings, setHappenings] = useState([]);
   const [chunks, setChunks] = useState([]);
   const [samples, setSamples] = useState([]);
-  const [customOpen, setCustomOpen] = useState(false);
   const [hasRun, setHasRun] = useState(false);
   const pendingCompare = useRef(false);
+  const [selectedSample, setSelectedSample] = useState("");
+  const [uploadedFile, setUploadedFile] = useState(null);
 
   useEffect(() => {
     getSamples().then(setSamples).catch(() => {});
@@ -43,14 +44,15 @@ export default function DemoTab({ socket, onStateChange }) {
     setChunks([]);
     const fd = new FormData();
     const opts = {
-      sample: samples[0]?.name || "sample.txt",
+      sample: selectedSample || samples[0]?.name || "sample.txt",
       check: "crc32",
       fec: false,
-      chunk: 1024,
+      chunk: 256,
     };
     fd.append("opts", JSON.stringify(opts));
+    if (uploadedFile) fd.append("file", uploadedFile);
     await sendFile(fd).catch(() => setRunning(false));
-  }, [samples, addHappening]);
+  }, [samples, addHappening, selectedSample, uploadedFile]);
 
   useEffect(() => {
     return socket.onTelemetry((ev) => {
@@ -140,39 +142,13 @@ export default function DemoTab({ socket, onStateChange }) {
 
     const fd = new FormData();
     const opts = {
-      sample: samples[0]?.name || "sample.txt",
+      sample: selectedSample || samples[0]?.name || "sample.txt",
       check: cfg.check || "checksum16",
       fec: cfg.fec || false,
-      chunk: 1024,
+      chunk: 256,
     };
     fd.append("opts", JSON.stringify(opts));
-    await sendFile(fd).catch(() => setRunning(false));
-  }
-
-  async function runCustom(opts) {
-    setActiveObj(null);
-    setResult(null);
-    setCompareResult(null);
-    setHappenings([]);
-    setChunks([]);
-    setRunning(true);
-    setHasRun(true);
-    pendingCompare.current = false;
-
-    await setProxy({
-      mode: opts.mode || "clean",
-      rate: parseFloat(opts.rate) || 0,
-      pattern: opts.pattern || "random",
-    });
-
-    const fd = new FormData();
-    fd.append("opts", JSON.stringify({
-      sample: opts.sample || samples[0]?.name || "sample.txt",
-      check: opts.check || "checksum16",
-      fec: opts.fec || false,
-      chunk: parseInt(opts.chunk) || 1024,
-    }));
-    if (opts.file) fd.append("file", opts.file);
+    if (uploadedFile) fd.append("file", uploadedFile);
     await sendFile(fd).catch(() => setRunning(false));
   }
 
@@ -201,6 +177,26 @@ export default function DemoTab({ socket, onStateChange }) {
           <p className="intro-hint">Keyboard: press 1, 2, 3, or 4</p>
         </div>
 
+        <div className="file-selector card" style={{ marginBottom: 16 }}>
+          <h4 style={{ margin: "0 0 8px", fontSize: "0.9rem" }}>File to transfer</h4>
+          <div style={{ display: "flex", gap: 16, alignItems: "end", flexWrap: "wrap" }}>
+            <label>
+              Sample file
+              <select value={selectedSample} onChange={(e) => { setSelectedSample(e.target.value); setUploadedFile(null); }}>
+                <option value="">sample.txt (default)</option>
+                {samples.map((s) => (
+                  <option key={s.name} value={s.name}>{s.name} ({(s.size / 1024).toFixed(1)} KB)</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Or upload your own
+              <input type="file" onChange={(e) => { if (e.target.files[0]) { setUploadedFile(e.target.files[0]); setSelectedSample(""); } }} />
+            </label>
+          </div>
+          {uploadedFile && <p style={{ margin: "6px 0 0", fontSize: "0.8rem", color: "var(--text-muted)" }}>Using uploaded file: {uploadedFile.name}</p>}
+        </div>
+
         <div className="objective-cards">
           {OBJECTIVES.map((obj, i) => (
             <button
@@ -219,14 +215,6 @@ export default function DemoTab({ socket, onStateChange }) {
           ))}
         </div>
 
-        <details
-          className="custom-panel card"
-          open={customOpen}
-          onToggle={(e) => setCustomOpen(e.target.open)}
-        >
-          <summary>Custom run (choose your own settings)</summary>
-          <CustomRunForm samples={samples} onRun={runCustom} running={running} />
-        </details>
       </div>
     );
   }
@@ -234,6 +222,17 @@ export default function DemoTab({ socket, onStateChange }) {
   return (
     <div className="demo-tab">
       <div className="demo-left">
+        <div className="file-selector card" style={{ marginBottom: 12 }}>
+          <h4 style={{ margin: "0 0 6px", fontSize: "0.85rem" }}>File to transfer</h4>
+          <select value={selectedSample} onChange={(e) => { setSelectedSample(e.target.value); setUploadedFile(null); }} style={{ width: "100%" }}>
+            <option value="">sample.txt (default)</option>
+            {samples.map((s) => (
+              <option key={s.name} value={s.name}>{s.name} ({(s.size / 1024).toFixed(1)} KB)</option>
+            ))}
+          </select>
+          <input type="file" style={{ marginTop: 6, fontSize: "0.8rem" }} onChange={(e) => { if (e.target.files[0]) { setUploadedFile(e.target.files[0]); setSelectedSample(""); } }} />
+          {uploadedFile && <p style={{ margin: "4px 0 0", fontSize: "0.75rem", color: "var(--text-muted)" }}>Using: {uploadedFile.name}</p>}
+        </div>
         <ObjectiveStepper
           objectives={OBJECTIVES}
           completed={completed}
@@ -241,14 +240,6 @@ export default function DemoTab({ socket, onStateChange }) {
           running={running}
           onRun={runObjective}
         />
-        <details
-          className="custom-panel card"
-          open={customOpen}
-          onToggle={(e) => setCustomOpen(e.target.open)}
-        >
-          <summary>Custom run</summary>
-          <CustomRunForm samples={samples} onRun={runCustom} running={running} />
-        </details>
       </div>
       <div className="demo-main">
         <WhatsHappening items={happenings} />
@@ -258,11 +249,13 @@ export default function DemoTab({ socket, onStateChange }) {
               result={result}
               label="Run 1: Checksum"
               chunks={[]}
+              onOpenCalculator={onOpenCalculator}
             />
             <ResultCard
               result={compareResult}
               label="Run 2: CRC32"
               chunks={chunks}
+              onOpenCalculator={onOpenCalculator}
             />
           </div>
         ) : result ? (
@@ -271,76 +264,10 @@ export default function DemoTab({ socket, onStateChange }) {
             objective={OBJECTIVES.find((o) => o.id === activeObj)}
             completed={completed[activeObj]}
             chunks={chunks}
+            onOpenCalculator={onOpenCalculator}
           />
         ) : null}
       </div>
-    </div>
-  );
-}
-
-function CustomRunForm({ samples, onRun, running }) {
-  const [mode, setMode] = useState("clean");
-  const [rate, setRate] = useState("20");
-  const [check, setCheck] = useState("checksum16");
-  const [fec, setFec] = useState(false);
-  const [sample, setSample] = useState("");
-  const [file, setFile] = useState(null);
-  const [pattern, setPattern] = useState("random");
-
-  return (
-    <div className="custom-form">
-      <label>
-        File
-        <select value={sample} onChange={(e) => setSample(e.target.value)}>
-          <option value="">Default sample</option>
-          {samples.map((s) => (
-            <option key={s.name} value={s.name}>{s.name} ({(s.size / 1024).toFixed(1)} KB)</option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Or upload
-        <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-      </label>
-      <label>
-        Network
-        <select value={mode} onChange={(e) => setMode(e.target.value)}>
-          <option value="clean">Clean</option>
-          <option value="noise">Noise</option>
-        </select>
-      </label>
-      {mode === "noise" && (
-        <label>
-          Pattern
-          <select value={pattern} onChange={(e) => setPattern(e.target.value)}>
-            <option value="random">Random bit flips</option>
-            <option value="swap">Word swap (fools checksum)</option>
-          </select>
-        </label>
-      )}
-      <label>
-        Damaged chunks: {rate}%
-        <input type="range" min="0" max="50" step="1" value={rate}
-          onChange={(e) => setRate(e.target.value)} />
-      </label>
-      <label>
-        Error check
-        <select value={check} onChange={(e) => setCheck(e.target.value)}>
-          <option value="checksum16">16-bit checksum</option>
-          <option value="crc32">CRC32</option>
-        </select>
-      </label>
-      <label className="checkbox-label">
-        <input type="checkbox" checked={fec} onChange={(e) => setFec(e.target.checked)} />
-        Hamming(7,4) repair
-      </label>
-      <button
-        className="btn-send"
-        disabled={running}
-        onClick={() => onRun({ mode, rate: parseInt(rate) / 100, check, fec, sample, file, pattern })}
-      >
-        {running ? "Sending..." : "Send"}
-      </button>
     </div>
   );
 }

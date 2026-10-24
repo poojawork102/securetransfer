@@ -1,13 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { solveNumerical } from "../../utils/api";
 import StepList from "./StepList";
 
-export default function CrcSolver() {
+export default function CrcSolver({ prefill, onPrefillUsed }) {
   const [input, setInput] = useState("11010011");
   const [gen, setGen] = useState("crc3");
   const [flips, setFlips] = useState([]);
   const [sol, setSol] = useState(null);
   const [err, setErr] = useState("");
+  const prefillRef = useRef(null);
+
+  useEffect(() => {
+    if (prefill && prefill !== prefillRef.current) {
+      prefillRef.current = prefill;
+      if (prefill.input) setInput(prefill.input);
+      if (prefill.generator) setGen(prefill.generator);
+      setFlips(prefill.flips || []);
+      onPrefillUsed?.();
+      setTimeout(() => {
+        solveNumerical({
+          kind: "crc", input: prefill.input || input, mode: "bin",
+          generator: prefill.generator || gen, flips: prefill.flips || [],
+        })
+          .then((res) => setSol(res.solution))
+          .catch((e) => setErr(e.message));
+      }, 50);
+    }
+  }, [prefill]);
 
   async function solve(flipOverride) {
     setErr("");
@@ -40,12 +59,21 @@ export default function CrcSolver() {
         </label>
         <label>
           Generator
-          <select value={gen} onChange={(e) => setGen(e.target.value)}>
+          <select value={["crc3", "crc4", "crc8", "crc16", "crc32"].includes(gen) ? gen : "custom"} onChange={(e) => setGen(e.target.value === "custom" ? "10011" : e.target.value)}>
             <option value="crc3">CRC-3 (1011)</option>
             <option value="crc4">CRC-4 (10011)</option>
             <option value="crc8">CRC-8 (100000111)</option>
+            <option value="crc16">CRC-16 (11000000000000101)</option>
+            <option value="crc32">CRC-32</option>
+            <option value="custom">Custom</option>
           </select>
         </label>
+        {!["crc3", "crc4", "crc8", "crc16", "crc32"].includes(gen) && (
+          <label>
+            Generator polynomial (binary, starts with 1)
+            <input value={gen} onChange={(e) => setGen(e.target.value)} style={{ width: 200 }} />
+          </label>
+        )}
         <button className="btn-solve" onClick={() => solve()}>Solve</button>
       </div>
 

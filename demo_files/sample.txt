@@ -1,0 +1,63 @@
+dog quick ACK client server TCP lazy over reliable brown quick over retransmit server quick
+error network server data ACK the packet reliable socket ACK checksum retransmit socket
+over payload lazy byte byte proxy
+integrity dog payload over NACK
+header error jumps brown server NACK over server lazy payload ACK integrity header packet header
+retransmit ACK jumps packet client packet integrity payload ACK server
+protocol fox server brown protocol segment ACK jumps retransmit protocol retransmit verify segment integrity checksum
+TCP client proxy reliable segment header server TCP verify
+fox dog checksum packet reliable jumps
+payload integrity proxy the dog ACK socket dog NACK reliable packet
+the proxy frame lazy transfer error checksum header packet the protocol verify
+dog header transfer client fox
+over over verify jumps TCP TCP hash packet
+reliable retransmit error transfer segment header data data dog
+server jumps socket quick server server the jumps
+fox server jumps brown socket jumps client ACK verify retransmit TCP hash client hash network
+lazy lazy reliable byte reliable network integrity fox
+lazy fox segment socket lazy client error error data TCP reliable frame ACK integrity client
+data lazy fox the over client
+network verify hash retransmit segment fox packet
+the payload proxy integrity NACK reliable verify checksum error NACK retransmit
+fox protocol fox fox hash
+packet fox over frame jumps jumps client segment dog client brown over network
+protocol proxy retransmit protocol client proxy segment TCP transfer integrity protocol jumps the integrity lazy
+retransmit proxy TCP byte jumps client
+NACK packet data transfer the transfer lazy TCP proxy dog
+checksum ACK NACK retransmit socket retransmit
+proxy verify proxy fox over reliable ACK brown the socket TCP proxy packet data reliable
+the dog jumps checksum brown header checksum reliable TCP brown transfer header brown
+retransmit client lazy byte network checksum client packet frame network
+frame socket network client ACK
+lazy payload brown hash server error integrity
+transfer server server quick error segment socket ACK jumps ACK
+segment socket quick dog proxy frame proxy brown lazy reliable
+protocol reliable dog payload error proxy brown reliable the error
+reliable jumps socket protocol dog transfer transfer network protocol segment
+TCP error network payload frame transfer segment the transfer
+retransmit reliable protocol integrity data data retransmit hash packet
+over NACK socket over client transfer server error checksum quick brown client hash jumps integrity
+error payload verify segment client checksum the lazy reliable server frame
+integrity fox client dog integrity TCP integrity protocol data reliable data packet hash
+proxy client ACK verify client ACK data jumps NACK client ACK socket
+over TCP checksum server payload checksum retransmit jumps network network
+integrity network fox retransmit network payload quick payload hash the
+transfer payload network server verify server ACK reliable verify quick
+socket segment packet integrity TCP quick segment quick over reliable TCP
+frame fox proxy payload protocol retransmit integrity protocol socket payload ACK network
+over hash quick fox byte server jumps brown quick
+error quick checksum client TCP hash dog retransmit
+proxy header packet dog packet transfer lazy quick transfer payload segment error
+client lazy transfer dog brown byte
+reliable header jumps socket the network verify lazy reliable header integrity checksum reliable
+ACK hash integrity reliable ACK protocol client
+ACK data client integrity payload socket
+verify protocol frame verify retransmit
+proxy socket ACK ACK the error over client network verify
+client hash verify data quick over NACK server segment client transfer header hash
+byte reliable socket byte integrity ACK transfer proxy server dog error protocol dog
+frame error retransmit hash ACK NACK lazy error NACK server header frame transfer
+TCP ACK brown fox NACK
+verify lazy the NACK hash hash data
+frame fox proxy hash dog jumps segment verify jumps fox
+checksum transfer over client dog network server

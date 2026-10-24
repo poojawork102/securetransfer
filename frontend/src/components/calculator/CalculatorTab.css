@@ -106,12 +106,12 @@
 }
 
 .step-card:hover {
-  border-color: rgba(34, 211, 238, 0.25);
+  border-color: rgba(76, 141, 255, 0.25);
 }
 
 .step-card-result {
   border-color: var(--accent);
-  background: rgba(8, 145, 178, 0.06);
+  background: rgba(76, 141, 255, 0.06);
 }
 
 .step-card-header {
@@ -234,14 +234,14 @@
 }
 
 .step-table-cell.cell-parity {
-  background: rgba(34, 211, 238, 0.1);
+  background: rgba(76, 141, 255, 0.1);
   color: var(--accent);
-  border-color: rgba(34, 211, 238, 0.2);
+  border-color: rgba(76, 141, 255, 0.2);
 }
 
 .step-table-cell.cell-data {
   background: rgba(99, 102, 241, 0.1);
-  color: #a5b4fc;
+  color: #93a4d6;
   border-color: rgba(99, 102, 241, 0.2);
 }
 
@@ -302,7 +302,7 @@
 
 .bit-cell:hover { background: var(--border); }
 .bit-cell.flipped { background: rgba(239,68,68,0.2); color: var(--red); border-color: rgba(239,68,68,0.3); }
-.bit-cell.parity { background: rgba(34,211,238,0.1); color: var(--accent); border-color: rgba(34,211,238,0.2); }
+.bit-cell.parity { background: rgba(76,141,255,0.1); color: var(--accent); border-color: rgba(76,141,255,0.2); }
 
 @media (max-width: 768px) {
   .flow-card { min-width: 180px; max-width: 240px; padding: 10px 12px; }

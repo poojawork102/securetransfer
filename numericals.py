@@ -23,6 +23,7 @@ import protocol as P
 MAX_BITS = 256
 SUP = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
 GENERATORS = {"crc3": "1011", "crc4": "10011", "crc8": "100000111",
+              "crc16": "11000000000000101",
               "crc32": "100000100110000010001110110110111"}
 CRC32_POLY_BITS = GENERATORS["crc32"]
 
@@ -168,8 +169,8 @@ def _ones_complement_sum(words, k, steps, label="running sum"):
 def solve_checksum(text, mode="auto", word=8, flips=(), swap=None):
     bits, mode = parse_bits(text, mode)
     k = int(word)
-    if k not in (8, 16):
-        raise ValueError("word size must be 8 or 16")
+    if k < 4 or k > 32 or (k & (k - 1)):
+        raise ValueError("word size must be a power of 2 between 4 and 32")
     pad = -len(bits) % k
     data = bits + "0" * pad
     words = [data[i:i + k] for i in range(0, len(data), k)]
@@ -331,8 +332,8 @@ def solve_crc(text, mode="auto", generator="crc3", flips=()):
     name = next((k for k, v in GENERATORS.items() if v == gen), "custom")
     if name == "crc32":
         return _solve_crc32(bits, text, mode, flips)
-    if len(bits) > 96:
-        raise ValueError("CRC long division is limited to 96 data bits in the Lab (use crc32 for longer data)")
+    if len(bits) > 256:
+        raise ValueError("CRC long division is limited to 256 data bits in the Lab (use crc32 for longer data)")
     r = len(gen) - 1
 
     # ---- sender ----
@@ -499,11 +500,10 @@ def _cell_hl(indices, cls):
 def solve_hamming(text, mode="auto", scheme="74", parity="even", flips=()):
     bits, mode = parse_bits(text, mode)
     parity = "odd" if parity == "odd" else "even"
-    if scheme == "74":
-        if len(bits) != 4:
-            raise ValueError("Hamming(7,4) takes exactly 4 data bits — use the general mode for other lengths")
-    elif len(bits) > 26:
-        raise ValueError("general Hamming mode is limited to 26 data bits in the Lab")
+    if scheme == "74" and len(bits) != 4:
+        scheme = "general"
+    if len(bits) > 26:
+        raise ValueError("Hamming is limited to 26 data bits in the Lab")
     m = len(bits)
     r, n, ppos, dpos = hamming_layout(m)
     cw = hamming_encode_bits(bits, parity)

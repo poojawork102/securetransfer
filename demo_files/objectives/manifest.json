@@ -1,0 +1,47 @@
+{
+  "description": "Expected outcomes for each demo objective. The frontend compares actual transfer results against these to show PASS/FAIL.",
+  "objectives": {
+    "O1": {
+      "label": "Does the file arrive intact?",
+      "expected": {
+        "sha256_match": true,
+        "retransmissions": 0,
+        "bits_corrected": 0,
+        "verdict": "VERIFIED"
+      },
+      "pass_criteria": "SHA-256 hashes match and zero retransmissions"
+    },
+    "O2": {
+      "label": "Does the checksum detect damaged chunks?",
+      "expected": {
+        "sha256_match": true,
+        "retransmissions_gt": 0,
+        "detection_rate_pct_gte": 90,
+        "verdict": "VERIFIED"
+      },
+      "pass_criteria": "All corrupted chunks detected (retransmissions > 0) and final file verified"
+    },
+    "O3": {
+      "label": "Can Hamming fix 1-bit errors without re-sending?",
+      "expected": {
+        "sha256_match": true,
+        "retransmissions": 0,
+        "bits_corrected_gt": 0,
+        "verdict": "VERIFIED"
+      },
+      "pass_criteria": "Zero retransmissions, bits corrected > 0, and file verified"
+    },
+    "O4": {
+      "label": "Checksum vs CRC32: which detects more?",
+      "expected": {
+        "checksum_run": {
+          "undetected_corruptions_gt": 0
+        },
+        "crc_run": {
+          "detection_rate_pct_gte": 99
+        }
+      },
+      "pass_criteria": "Checksum misses at least one word-swap corruption; CRC32 detects all or nearly all"
+    }
+  }
+}

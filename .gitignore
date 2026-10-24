@@ -9,5 +9,5 @@ uploads/
 .DS_Store
 received/.incoming/
 frontend/node_modules/
-demo_files/
+
 .pytest_cache/

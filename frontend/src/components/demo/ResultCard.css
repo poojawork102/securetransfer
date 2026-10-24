@@ -82,70 +82,6 @@
   line-height: 1.7;
 }
 
-/* wireshark hints */
-.wireshark-hints {
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-}
-
-.hint-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-.hint-card {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
-}
-
-.hint-icon {
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-}
-
-.hint-body {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.hint-title {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text);
-  line-height: 1.3;
-}
-
-.hint-detail {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-
-.hint-filter {
-  font-size: 0.72rem;
-  color: var(--accent);
-  background: var(--bg-input);
-  padding: 2px 6px;
-  border-radius: 4px;
-  align-self: flex-start;
-  margin-top: 2px;
-}
-
-@media (max-width: 768px) {
-  .hint-grid { grid-template-columns: 1fr; }
-}
-
 /* chunk map */
 .chunk-map {
   margin-top: 16px;
@@ -192,4 +128,38 @@
   height: 8px;
   border-radius: 2px;
   flex-shrink: 0;
+}
+
+/* eval table */
+.eval-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  margin-top: 6px;
+}
+
+.eval-table th {
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.eval-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.chunk-cell-clickable {
+  cursor: pointer;
+  outline: 1px solid transparent;
+  transition: outline-color 0.15s, transform 0.1s;
+}
+
+.chunk-cell-clickable:hover {
+  outline-color: var(--accent);
+  transform: scale(1.6);
+  z-index: 1;
 }

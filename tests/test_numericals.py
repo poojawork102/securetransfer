@@ -178,9 +178,10 @@ class TestHammingSolver(unittest.TestCase):
             self.assertLess(2 ** (r - 1), m + (r - 1) + 1)
             self.assertEqual((n, len(dpos)), (m + r, m))
 
-    def test_74_requires_exactly_four_bits(self):
-        with self.assertRaises(ValueError):
-            N.solve("hamming", input="10110", mode="bin")
+    def test_74_auto_switches_to_general(self):
+        sol = N.solve("hamming", input="10110", mode="bin")
+        self.assertEqual(sol["extra"]["m"], 5)
+        self.assertEqual(sol["extra"]["n"], 9)
 
 
 class TestInputsAndExamples(unittest.TestCase):

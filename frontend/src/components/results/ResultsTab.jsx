@@ -14,6 +14,17 @@ export default function ResultsTab() {
 
   return (
     <div className="results-tab">
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h3 style={{ margin: "0 0 8px" }}>How these results are generated</h3>
+        <p className="muted" style={{ fontSize: "0.85rem", lineHeight: 1.6 }}>
+          These charts come from <code>bench.py</code>, which runs real file transfers through
+          the full protocol stack (client, proxy, server) on localhost. It sends a 128 KB test
+          file multiple times under varying error rates and corruption patterns, then measures
+          throughput, retransmissions, and detection rates. Each data point is averaged over 3
+          runs. The proxy injects the same faults (bit flips, word swaps) used in the live demo,
+          so the numbers reflect actual protocol behavior, not a simulation.
+        </p>
+      </div>
       <div className="graphs-grid">
         <div className="card">
           <h3>Throughput vs error rate</h3>
@@ -22,30 +33,6 @@ export default function ResultsTab() {
         <div className="card">
           <h3>Detection rate: checksum vs CRC32</h3>
           <DetectionChart data={results?.["bench_detection.csv"]} />
-        </div>
-        <div className="card">
-          <h3>Throughput vs added latency</h3>
-          <LineChart
-            data={results?.["bench_latency.csv"]}
-            xKey="added_latency_ms"
-            yKey="throughput_kbps"
-            label="Throughput"
-            color="#22d3ee"
-            xLabel="Added latency (ms)"
-            yLabel="Throughput (KB/s)"
-          />
-        </div>
-        <div className="card">
-          <h3>Throughput vs frame loss</h3>
-          <LineChart
-            data={results?.["bench_loss.csv"]}
-            xKey="frame_loss_pct"
-            yKey="throughput_kbps"
-            label="Throughput"
-            color="#f59e0b"
-            xLabel="Frame loss (%)"
-            yLabel="Throughput (KB/s)"
-          />
         </div>
       </div>
 
@@ -120,8 +107,8 @@ function NoiseChart({ data }) {
           {
             label: "Checksum + ARQ",
             data: arqRows.map((r) => parseFloat(r.throughput_kbps)),
-            borderColor: "#22d3ee",
-            backgroundColor: "#22d3ee20",
+            borderColor: "#4c8dff",
+            backgroundColor: "#4c8dff20",
             tension: 0.3,
             pointRadius: 4,
           },
@@ -166,7 +153,7 @@ function DetectionChart({ data }) {
           {
             label: "CRC32",
             data: data.map((r) => parseFloat(r.crc32_pct)),
-            backgroundColor: "rgba(34,211,238,0.6)",
+            backgroundColor: "rgba(76,141,255,0.6)",
           },
         ],
       },
@@ -175,39 +162,6 @@ function DetectionChart({ data }) {
 
     return () => { if (chartRef.current) chartRef.current.destroy(); };
   }, [data]);
-
-  if (!data) return <NoData />;
-  return <canvas ref={canvasRef} height="200" />;
-}
-
-function LineChart({ data, xKey, yKey, label, color, xLabel, yLabel }) {
-  const canvasRef = useRef(null);
-  const chartRef = useRef(null);
-
-  useEffect(() => {
-    if (!data || !canvasRef.current) return;
-    if (chartRef.current) chartRef.current.destroy();
-
-    chartRef.current = new Chart(canvasRef.current, {
-      type: "line",
-      data: {
-        labels: data.map((r) => r[xKey]),
-        datasets: [
-          {
-            label,
-            data: data.map((r) => parseFloat(r[yKey])),
-            borderColor: color,
-            backgroundColor: color + "20",
-            tension: 0.3,
-            pointRadius: 4,
-          },
-        ],
-      },
-      options: makeOptions(xLabel, yLabel),
-    });
-
-    return () => { if (chartRef.current) chartRef.current.destroy(); };
-  }, [data, xKey, yKey, label, color, xLabel, yLabel]);
 
   if (!data) return <NoData />;
   return <canvas ref={canvasRef} height="200" />;
