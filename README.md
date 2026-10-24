@@ -6,8 +6,8 @@ CNL Mini Project, Topic 16, Group 4.
 | Member | PRN | Panel |
 |---|---|---|
 | Pooja Lingwat | 1262242831 | C |
-| Saloni Muley | | |
-| Aaditya Anekar | | |
+| Saloni Muley | 1262242828 | C |
+| Aaditya Anekar | 1262242880 | C |
 | Pratham Shelke | | |
 
 ## Overview
