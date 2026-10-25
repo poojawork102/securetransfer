@@ -1,10 +1,19 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import ObjectiveStepper from "./ObjectiveStepper";
-import WhatsHappening from "./WhatsHappening";
 import ResultCard from "./ResultCard";
 import { OBJECTIVES } from "../../utils/constants";
 import { sendFile, setProxy, getSamples } from "../../utils/api";
 import "./DemoTab.css";
+
+function upsertChunk(prev, seq, status) {
+  const idx = prev.findIndex((c) => c.seq === seq);
+  if (idx >= 0) {
+    const copy = [...prev];
+    copy[idx] = { ...copy[idx], status };
+    return copy;
+  }
+  return [...prev, { seq, status }];
+}
 
 export default function DemoTab({ socket, onStateChange, onOpenCalculator }) {
   const [running, setRunning] = useState(false);
@@ -12,13 +21,27 @@ export default function DemoTab({ socket, onStateChange, onOpenCalculator }) {
   const [activeObj, setActiveObj] = useState(null);
   const [result, setResult] = useState(null);
   const [compareResult, setCompareResult] = useState(null);
-  const [happenings, setHappenings] = useState([]);
   const [chunks, setChunks] = useState([]);
+  const [firstRunChunks, setFirstRunChunks] = useState([]);
   const [samples, setSamples] = useState([]);
   const [hasRun, setHasRun] = useState(false);
   const pendingCompare = useRef(false);
   const [selectedSample, setSelectedSample] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const activeObjRef = useRef(null);
+  const chunksRef = useRef([]);
+  const samplesRef = useRef([]);
+  const selectedSampleRef = useRef("");
+  const uploadedFileRef = useRef(null);
+  const toastTimer = useRef(null);
+
+  useEffect(() => { activeObjRef.current = activeObj; }, [activeObj]);
+  useEffect(() => { chunksRef.current = chunks; }, [chunks]);
+  useEffect(() => { samplesRef.current = samples; }, [samples]);
+  useEffect(() => { selectedSampleRef.current = selectedSample; }, [selectedSample]);
+  useEffect(() => { uploadedFileRef.current = uploadedFile; }, [uploadedFile]);
 
   useEffect(() => {
     getSamples().then(setSamples).catch(() => {});
@@ -28,89 +51,28 @@ export default function DemoTab({ socket, onStateChange, onOpenCalculator }) {
     if (onStateChange) onStateChange({ running, activeObj });
   }, [running, activeObj, onStateChange]);
 
-  const addHappening = useCallback((text, type = "info") => {
-    setHappenings((prev) => {
-      const last = prev[prev.length - 1];
-      if (last && last.text === text) {
-        return [...prev.slice(0, -1), { ...last, count: (last.count || 1) + 1 }];
-      }
-      const trimmed = prev.length >= 6 ? prev.slice(-5) : prev;
-      return [...trimmed, { text, type, count: 1 }];
-    });
-  }, []);
+  function showToast(msg) {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(msg);
+    toastTimer.current = setTimeout(() => setToast(null), 5000);
+  }
 
   const startCompareRun = useCallback(async () => {
-    addHappening("Now running CRC32 for comparison...", "info");
+    setFirstRunChunks(chunksRef.current);
     setChunks([]);
+    showToast("Running CRC-32 comparison transfer...");
     const fd = new FormData();
     const opts = {
-      sample: selectedSample || samples[0]?.name || "sample.txt",
+      sample: selectedSampleRef.current || samplesRef.current[0]?.name || "sample.txt",
       check: "crc32",
       fec: false,
-      chunk: 256,
+      chunk: 1024,
+      delay: 0,
     };
     fd.append("opts", JSON.stringify(opts));
-    if (uploadedFile) fd.append("file", uploadedFile);
+    if (uploadedFileRef.current) fd.append("file", uploadedFileRef.current);
     await sendFile(fd).catch(() => setRunning(false));
-  }, [samples, addHappening, selectedSample, uploadedFile]);
-
-  useEffect(() => {
-    return socket.onTelemetry((ev) => {
-      if (ev.ev === "chunk_sent") {
-        setChunks((prev) => [...prev, { seq: ev.seq, status: "travelling" }]);
-        addHappening(`Client sends chunk ${ev.seq}.`);
-      } else if (ev.ev === "chunk_ok") {
-        setChunks((prev) =>
-          prev.map((c) => (c.seq === ev.seq ? { ...c, status: "accepted" } : c))
-        );
-      } else if (ev.ev === "chunk_nack") {
-        setChunks((prev) =>
-          prev.map((c) => (c.seq === ev.seq ? { ...c, status: "nacked" } : c))
-        );
-        const reason = ev.reason || "checksum mismatch";
-        addHappening(
-          `Server recomputes the checksum of chunk ${ev.seq}: ${reason}, sends NACK, chunk is re-sent.`,
-          "warn"
-        );
-      } else if (ev.ev === "chunk_fixed") {
-        setChunks((prev) =>
-          prev.map((c) => (c.seq === ev.seq ? { ...c, status: "corrected" } : c))
-        );
-        addHappening(
-          `Hamming corrects a 1-bit error in chunk ${ev.seq}, no retransmission needed.`,
-          "fix"
-        );
-      } else if (ev.ev === "corrupt") {
-        setChunks((prev) =>
-          prev.map((c) => (c.seq === ev.seq ? { ...c, status: "damaged" } : c))
-        );
-      } else if (ev.ev === "result") {
-        const verified = ev.match === true;
-        const thisResult = { verified, expected: ev.expected, got: ev.got };
-
-        if (pendingCompare.current) {
-          pendingCompare.current = false;
-          setCompareResult(thisResult);
-          setRunning(false);
-          setCompleted((prev) => ({ ...prev, O4: true }));
-        } else if (activeObj === "O4") {
-          setResult(thisResult);
-          pendingCompare.current = true;
-          startCompareRun();
-        } else {
-          setResult(thisResult);
-          setRunning(false);
-          if (activeObj) {
-            const obj = OBJECTIVES.find((o) => o.id === activeObj);
-            if (obj) {
-              const met = checkObjectiveMet(obj, ev);
-              setCompleted((prev) => ({ ...prev, [activeObj]: met }));
-            }
-          }
-        }
-      }
-    });
-  }, [socket, addHappening, activeObj, startCompareRun]);
+  }, []);
 
   function checkObjectiveMet(obj, resultEv) {
     if (obj.id === "O1") return resultEv.match === true;
@@ -120,6 +82,58 @@ export default function DemoTab({ socket, onStateChange, onOpenCalculator }) {
     return resultEv.match === true;
   }
 
+  useEffect(() => {
+    return socket.onTelemetry((ev) => {
+      if (ev.src === "client" && ev.ev === "send") {
+        if (ev.attempt === 1) {
+          setChunks((prev) => {
+            if (prev.some((c) => c.seq === ev.seq)) return prev;
+            return [...prev, { seq: ev.seq, status: "travelling" }];
+          });
+        }
+      } else if (ev.src === "server" && ev.ev === "chunk") {
+        if (ev.status === "ok") {
+          setChunks((prev) => {
+            const existing = prev.find((c) => c.seq === ev.seq);
+            if (existing?.status === "damaged") return prev;
+            return upsertChunk(prev, ev.seq, "accepted");
+          });
+        } else if (ev.status === "corrected") {
+          setChunks((prev) => upsertChunk(prev, ev.seq, "corrected"));
+        } else if (ev.status === "crc_fail" || ev.status === "checksum_fail") {
+          setChunks((prev) => upsertChunk(prev, ev.seq, "nacked"));
+        }
+      } else if (ev.src === "proxy" && ev.ev === "corrupt") {
+        setChunks((prev) => upsertChunk(prev, ev.seq, "damaged"));
+      } else if (ev.src === "server" && ev.ev === "result") {
+        const verified = ev.match === true;
+        const thisResult = { verified, expected: ev.expected, got: ev.got };
+
+        if (pendingCompare.current) {
+          pendingCompare.current = false;
+          setCompareResult(thisResult);
+          setRunning(false);
+          setCompleted((prev) => ({ ...prev, O4: true }));
+        } else if (activeObjRef.current === "O4") {
+          setResult(thisResult);
+          pendingCompare.current = true;
+          startCompareRun();
+        } else {
+          setResult(thisResult);
+          setRunning(false);
+          const curObj = activeObjRef.current;
+          if (curObj) {
+            const obj = OBJECTIVES.find((o) => o.id === curObj);
+            if (obj) {
+              const met = checkObjectiveMet(obj, ev);
+              setCompleted((prev) => ({ ...prev, [curObj]: met }));
+            }
+          }
+        }
+      }
+    });
+  }, [socket, startCompareRun]);
+
   async function runObjective(objId) {
     const obj = OBJECTIVES.find((o) => o.id === objId);
     if (!obj || running) return;
@@ -127,11 +141,13 @@ export default function DemoTab({ socket, onStateChange, onOpenCalculator }) {
     setActiveObj(objId);
     setResult(null);
     setCompareResult(null);
-    setHappenings([]);
     setChunks([]);
+    setFirstRunChunks([]);
     setRunning(true);
     setHasRun(true);
     pendingCompare.current = false;
+
+    showToast("Transfer started -- check Protocol Log for live details");
 
     const cfg = obj.config;
     await setProxy({
@@ -145,7 +161,8 @@ export default function DemoTab({ socket, onStateChange, onOpenCalculator }) {
       sample: selectedSample || samples[0]?.name || "sample.txt",
       check: cfg.check || "checksum16",
       fec: cfg.fec || false,
-      chunk: 256,
+      chunk: 1024,
+      delay: 0,
     };
     fd.append("opts", JSON.stringify(opts));
     if (uploadedFile) fd.append("file", uploadedFile);
@@ -168,6 +185,8 @@ export default function DemoTab({ socket, onStateChange, onOpenCalculator }) {
   if (idle) {
     return (
       <div className="demo-idle">
+        {toast && <div className="demo-toast">{toast}</div>}
+
         <div className="demo-intro card">
           <h2 className="intro-title">Live file transfer demo</h2>
           <p className="intro-text">
@@ -214,13 +233,16 @@ export default function DemoTab({ socket, onStateChange, onOpenCalculator }) {
             </button>
           ))}
         </div>
-
       </div>
     );
   }
 
+  const activeObjData = OBJECTIVES.find((o) => o.id === activeObj);
+
   return (
     <div className="demo-tab">
+      {toast && <div className="demo-toast">{toast}</div>}
+
       <div className="demo-left">
         <div className="file-selector card" style={{ marginBottom: 12 }}>
           <h4 style={{ margin: "0 0 6px", fontSize: "0.85rem" }}>File to transfer</h4>
@@ -242,17 +264,34 @@ export default function DemoTab({ socket, onStateChange, onOpenCalculator }) {
         />
       </div>
       <div className="demo-main">
-        <WhatsHappening items={happenings} />
+        {running && !result && (
+          <div className="transfer-progress card">
+            <div className="progress-header">
+              <span className="progress-label">
+                {activeObjData ? activeObjData.label : "Transferring..."}
+              </span>
+              <span className="progress-count">{chunks.length} chunks</span>
+            </div>
+            <div className="progress-bar">
+              <div className="progress-fill" />
+            </div>
+            <p className="progress-hint">
+              Watch the Protocol Log for live frame-by-frame details
+            </p>
+          </div>
+        )}
         {activeObj === "O4" && result && compareResult ? (
           <div className="compare-cards">
             <ResultCard
               result={result}
+              objective={OBJECTIVES.find((o) => o.id === "O4")}
               label="Run 1: Checksum"
-              chunks={[]}
+              chunks={firstRunChunks}
               onOpenCalculator={onOpenCalculator}
             />
             <ResultCard
               result={compareResult}
+              objective={OBJECTIVES.find((o) => o.id === "O4")}
               label="Run 2: CRC32"
               chunks={chunks}
               onOpenCalculator={onOpenCalculator}

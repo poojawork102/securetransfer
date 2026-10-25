@@ -79,6 +79,11 @@ def favicon():
     return send_from_directory(os.path.join(DIST_DIR), "favicon.svg")
 
 
+@app.route("/fonts/<path:name>")
+def fonts(name):
+    return send_from_directory(os.path.join(DIST_DIR, "fonts"), name)
+
+
 # ------------------------------------------------------------ simple APIs
 @app.get("/api/samples")
 def samples():
@@ -165,7 +170,7 @@ def send():
                 path, config.HOST, int(opts.get("port", config.PROXY_PORT)),
                 chunk_size=int(opts.get("chunk", 1024)),
                 use_fec=bool(opts.get("fec")),
-                delay_ms=int(opts.get("delay", 40)),
+                delay_ms=int(opts.get("delay", 0)),
                 timeout=float(opts.get("timeout", 1.0)), quiet=False,
                 check="checksum16" if opts.get("check") == "checksum16" else "crc32")
             record_session(opts, path, stats=stats)

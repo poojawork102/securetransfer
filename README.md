@@ -1,132 +1,293 @@
 # SecureTransfer
 
-TCP-Based Client-Server File Transfer with Error Verification.
-CNL Mini Project, Topic 16, Group 4.
+**TCP file transfer with chunk-level error detection, correction and verification.**
 
-| Member | PRN | Panel |
+Computer Networks Lab (CNL) mini project -- Topic 16, Group 4
+MIT-WPU, School of Computer Science, B.Tech CSE, TY, Academic Year 2026-27
+
+---
+
+## Team
+
+| Member | PRN | Contribution |
 |---|---|---|
-| Pooja Lingwat | 1262242831 | C |
-| Saloni Muley | 1262242828 | C |
-| Aaditya Anekar | 1262242880 | C |
-| Pratham Shelke | | |
+| Pooja Lingwat | 1262242831 | Protocol design (`protocol.py`), error detection/correction (CRC-32, 16-bit checksum, Hamming), proxy/channel simulation (`proxy.py`), numerical solvers (`numericals.py`), architecture diagram, `docs/PROTOCOL.md` |
+| Saloni Muley | 1262242828 | Server-side verification (`server.py`), ACK/NACK logic, SHA-256 whole-file check |
+| Aaditya Anekar | 1262242880 | Client-side chunking and stop-and-wait ARQ (`client.py`), launcher (`run_all.py`), performance benchmarks (`bench.py`) |
+| Pratham Shelke | -- | Dashboard and frontend (`dashboard/`, `frontend/`), Flask API, React UI with 4 tabs, test suite (`tests/`), test report, demo script |
 
-## Overview
+---
 
-A file transfer system over TCP that verifies every chunk using a 16-bit Internet
-checksum (RFC 1071). When a chunk is corrupted, the server sends a NACK and the client
-retransmits it. Hamming(7,4) forward error correction can repair single-bit errors
-without retransmission. CRC32 is available as a stronger detector for comparison.
-A SHA-256 hash of the whole file is checked at the end.
+## Problem statement
 
-A proxy sits between client and server to inject bit errors (noise) or word swaps,
-and a React + Flask dashboard visualises the transfer live.
+Design and implement a file transfer system over TCP that demonstrates how error detection, error correction and retransmission mechanisms work at the data-link and transport layers. The system should let users observe, in real time, what happens when data is corrupted during transit and how different protection schemes respond.
 
-## Architecture
+## Objectives
+
+1. **Does the file arrive intact?** -- Transfer a file over a clean channel using TCP, chunking and SHA-256 verification.
+2. **Does the checksum detect damaged chunks?** -- Inject bit-flip errors at 30% rate and verify that the 16-bit Internet checksum detects every corrupted chunk, triggering NACK and retransmission.
+3. **Can Hamming fix 1-bit errors without retransmission?** -- Enable Hamming(7,4) FEC and confirm that single-bit errors are corrected in place with zero retransmissions.
+4. **Checksum vs CRC-32: which detects more?** -- Inject word-swap corruption to show that the 16-bit checksum misses swaps (its known blind spot) while CRC-32 catches them.
+
+## Computer Networks concepts demonstrated
+
+- TCP socket programming (connection-oriented, reliable byte stream)
+- Chunking and reassembly (segmentation at the application layer)
+- Error detection: 16-bit Internet checksum (RFC 1071), CRC-32
+- Error correction: Hamming(7,4) forward error correction
+- Stop-and-wait ARQ (ACK, NACK, timeout, retransmission)
+- Channel simulation (bit flips, word swaps, configurable error rate)
+- Whole-file verification with SHA-256
+- UDP telemetry and real-time event streaming (Socket.IO)
+
+---
+
+## Tools and environment
+
+| Item | Version / Detail |
+|---|---|
+| Operating system | Windows 11 |
+| Language (backend) | Python 3.9+ |
+| Language (frontend) | JavaScript (React 19, Vite 6) |
+| Runtime | Node.js 18+ |
+| Web framework | Flask 3.0, Flask-SocketIO 5.3 |
+| Browser | Any modern browser (Chrome, Firefox, Edge) |
+| Dependency file | `requirements.txt` (Python), `frontend/package.json` (Node) |
+
+### Dependencies
+
+Python packages (listed in `requirements.txt`):
 
 ```
-Client :8000 --> Proxy (channel) :9000 --> Server
-                     |
-         UDP :5555 telemetry
-                     v
-              Dashboard :5050
+flask>=3.0
+flask-socketio>=5.3
+simple-websocket>=1.0
+matplotlib>=3.7       # only needed for bench.py graphs
 ```
 
-See the "How it works" tab in the dashboard for the full SVG diagrams.
+Node packages are installed via `npm install` inside the `frontend/` directory.
 
-## Setup
+---
 
-Python 3.9+. Node.js 18+ (for the frontend build).
+## Installation and execution
 
-```
-python -m venv .venv
-.venv\Scripts\activate
+### Step 1 -- Clone and install
+
+```bash
+git clone https://github.com/poojawork102/securetransfer.git
+cd securetransfer
+
+# Python dependencies
 pip install -r requirements.txt
+
+# Frontend dependencies and build
 cd frontend
 npm install
 npm run build
 cd ..
 ```
 
-## Running
+### Step 2 -- Run (recommended)
 
-One command:
-
-```
+```bash
 python run_all.py
 ```
 
-Three terminals (for the viva):
+This starts the server, proxy and dashboard in the correct order. The browser opens automatically at `http://localhost:5050`.
 
-```
-python server.py           (terminal 1)
-python proxy.py            (terminal 2)
-python dashboard/app.py    (terminal 3, open http://localhost:5050)
-```
+### Step 3 -- Or start manually (3 terminals, in this order)
 
-CLI only:
+```bash
+# Terminal 1 -- Server (listens on port 9000)
+python server.py
 
-```
-python proxy.py --mode noise --rate 0.2
-python client.py sample_files/sample.txt
-python client.py sample_files/sample.txt --fec
-python client.py sample_files/sample.txt --check crc32
+# Terminal 2 -- Proxy/Channel (listens on port 8000, forwards to server on 9000)
+python proxy.py
+
+# Terminal 3 -- Dashboard (serves UI on port 5050)
+python dashboard/app.py
 ```
 
-Client flags: `--fec`, `--check checksum16|crc32`, `--chunk 1024`.
-Proxy flags: `--mode clean|noise`, `--rate 0.2`, `--bits 1`, `--loss 0.05`.
+Then open `http://localhost:5050` in a browser.
 
-## Demo (5 minutes)
+### Ports
 
-Press keys 1 to 4 in the dashboard, or click the objectives:
-
-| # | Objective | Expected result |
+| Component | Port | Protocol |
 |---|---|---|
-| 1 | Does the file arrive intact? | SHA-256 verified |
-| 2 | Does the checksum detect damage? | Damaged chunks NACKed, retransmitted |
-| 3 | Can Hamming fix errors without retransmission? | 0 retransmits, errors corrected |
-| 4 | Checksum vs CRC32: which detects more? | Checksum misses word swap, CRC catches it |
+| Server | 9000 | TCP |
+| Proxy/Channel | 8000 | TCP (accepts client connections) |
+| Proxy control | 5556 | UDP (mode changes from dashboard) |
+| Telemetry | 5555 | UDP (events from all components) |
+| Dashboard | 5050 | HTTP + WebSocket |
 
-See `docs/DEMO_SCRIPT.md` for the full script.
+### CLI-only usage (no browser)
 
-## Tests
-
+```bash
+# Start server and proxy first, then:
+python client.py sample_files/sample.txt --check crc32 --fec --chunk 1024
 ```
+
+---
+
+## Example inputs and expected results
+
+### Sample files
+
+| File | Size | Location |
+|---|---|---|
+| `sample.txt` | ~64 KB | `sample_files/` |
+| `random_256k.bin` | 256 KB | `sample_files/` |
+
+### Expected results per objective
+
+| # | Objective | Configuration | Expected result |
+|---|---|---|---|
+| 1 | File arrives intact | Clean channel, checksum | SHA-256 match, 0 errors, 0 retransmissions |
+| 2 | Checksum detects damage | 30% noise, bit flips | All corrupted chunks NACKed and retransmitted, SHA-256 match |
+| 3 | Hamming corrects errors | 30% noise, Hamming FEC | 1-bit errors corrected in place, 0 retransmissions, SHA-256 match |
+| 4 | Checksum vs CRC-32 | Word-swap corruption | Checksum misses swaps (SHA-256 mismatch), CRC-32 catches them (SHA-256 match) |
+
+Each objective shows real-time chunk map, metric tiles, Expected vs Observed table with PASS/FAIL badges, SHA-256 hash comparison and a protocol log.
+
+### Testing evidence
+
+67 automated tests across 4 modules:
+
+```bash
 python -m pytest tests/ -v
 ```
 
-67 tests across 4 files: protocol, integration, checksum, numericals.
-See `docs/TEST_REPORT.md`.
+| Module | Covers |
+|---|---|
+| `test_protocol.py` | Frame build/parse, CRC-32, checksum, Hamming encode/decode |
+| `test_integration.py` | Full client-server transfers (clean, noise, FEC, word swap) |
+| `test_checksum.py` | Internet checksum edge cases |
+| `test_numericals.py` | Calculator solver correctness |
 
-## Performance
+Screenshots of demo results are in `docs/screenshots/`.
+
+See `docs/TEST_REPORT.md` for the full test report.
+
+---
+
+## Architecture
 
 ```
-python bench.py
+Client (:8000) --TCP--> Proxy/Channel --TCP--> Server (:9000)
+                              |
+                       UDP telemetry (:5555)
+                              |
+                       Dashboard (:5050) --Socket.IO--> Browser
 ```
 
-5 experiments: error rate sweep, chunk size, latency, detection power (checksum vs CRC32),
-frame loss. Results in `results/`.
+The proxy sits between client and server. In clean mode it forwards everything unchanged. In noise mode it flips random bits or swaps 16-bit words in DATA payloads. All components emit UDP telemetry to the dashboard, which pushes events to the browser via Socket.IO for real-time visualization.
 
-Key findings:
-- Checksum + ARQ throughput drops 50% at 50% error rate.
-- Hamming FEC maintains throughput with 0 retransmissions for 1-bit errors.
-- CRC32 detects 100% of all tested error patterns. Checksum misses some 2-bit errors.
-- 10% frame loss reduces throughput but all files still verify.
+### Protocol
 
-## Wireshark
+17-byte big-endian header followed by a variable-length payload:
 
-See `docs/WIRESHARK.md`. Filter: `tcp.port == 8000 || tcp.port == 9000`.
-Real captures go in `captures/`.
+```
+ 0      2     3     4     5        9        13       17
+ MAGIC  VER  TYPE  FLAGS  SEQ(4B)  LEN(4B)  CHECK(4B)  PAYLOAD
+ "FT"    2    1B    1B
+```
 
-## Limitations
+Frame types: META, DATA, ACK, NACK, DONE, RESULT, ERR
 
-- Stop-and-wait is slow on high-latency links. Go-Back-N would improve throughput.
-- Hamming(7,4) corrects only 1 bit per codeword. Real links use stronger codes.
-- Data is not encrypted: it is readable in Wireshark. A real system would use TLS.
-- Mininet topology is not implemented.
+See `docs/PROTOCOL.md` for the full specification.
+
+### Calculator
+
+The Calculator tab provides interactive solvers with step-by-step working for Checksum, CRC and Hamming. Clicking an error chunk in the demo opens the Calculator pre-filled with representative data.
+
+---
+
+## Known limitations
+
+- **Stop-and-wait ARQ** sends one chunk at a time. Go-Back-N or Selective Repeat would improve throughput.
+- **Hamming(7,4)** corrects only 1 bit per 7-bit codeword (75% overhead). Reed-Solomon or LDPC handle burst errors better.
+- **No encryption.** Data is readable on the wire. A production system would add TLS.
+- **Single client.** The server handles one transfer at a time.
+
+---
+
+## File structure
+
+```
+securetransfer/
+  client.py              Chunking, stop-and-wait ARQ
+  server.py              Verification, ACK/NACK, SHA-256
+  proxy.py               Channel simulation (bit flips, word swaps)
+  protocol.py            Frame format, CRC-32, checksum, Hamming(7,4)
+  numericals.py          Calculator solver engine
+  config.py              Ports, timeouts, paths
+  telemetry.py           UDP event emitter
+  run_all.py             Starts server + proxy + dashboard
+  bench.py               Performance benchmarks
+  requirements.txt       Python dependencies
+  CONTRIBUTIONS.md       Team member contributions
+  dashboard/
+    app.py               Flask + Socket.IO backend
+  frontend/
+    src/                 React 19 + Vite 6 source
+    dist/                Built frontend (committed)
+    package.json         Node dependencies
+  tests/                 pytest suite (67 tests)
+  sample_files/          Default transfer files
+  results/               Benchmark CSVs and graphs
+  docs/
+    PROTOCOL.md          Binary frame protocol specification
+    TEST_REPORT.md       Test results and coverage
+    DEMO_SCRIPT.md       Step-by-step demo walkthrough
+    VIVA_NOTES.md        Viva preparation notes
+    screenshots/         UI screenshots and test evidence
+    diagrams/            Architecture diagrams
+```
+
+---
+
+## Documentation
+
+| Document | Location | Status |
+|---|---|---|
+| Protocol specification | `docs/PROTOCOL.md` | Complete |
+| Test report | `docs/TEST_REPORT.md` | Complete |
+| Demo script | `docs/DEMO_SCRIPT.md` | Complete |
+| Viva notes | `docs/VIVA_NOTES.md` | Complete |
+| Final report (PDF, 2-40 pages) | `docs/` | To be added |
+| Presentation (PPTX, 12-20 slides) | `docs/` | To be added |
+
+---
+
+## Video and Drive link
+
+Implementation and presentation video: _To be added_
+
+---
 
 ## References
 
-1. RFC 793, Transmission Control Protocol.
-2. RFC 1071, Computing the Internet Checksum.
-3. R. W. Hamming, "Error Detecting and Error Correcting Codes," 1950.
-4. FIPS 180-4, Secure Hash Standard (SHA-256).
+1. RFC 793 -- Transmission Control Protocol
+2. RFC 1071 -- Computing the Internet Checksum
+3. R. W. Hamming, "Error Detecting and Error Correcting Codes," Bell System Technical Journal, 1950
+4. FIPS 180-4 -- Secure Hash Standard (SHA-256)
+5. W. Stallings, _Data and Computer Communications_, 10th edition, Pearson, 2013
+6. A. S. Tanenbaum and D. J. Wetherall, _Computer Networks_, 5th edition, Pearson, 2011
+
+## Attribution
+
+- Flask and Flask-SocketIO by Pallets Projects and Miguel Grinberg (BSD licence)
+- React by Meta (MIT licence)
+- Vite by Evan You (MIT licence)
+- Chart.js by Chart.js contributors (MIT licence)
+- IBM Plex fonts by IBM (SIL Open Font Licence)
+
+No passwords, access tokens, private keys or personal datasets are included in this repository.
+
+## Suggested improvements for future batches
+
+- Implement Go-Back-N or Selective Repeat ARQ for higher throughput.
+- Add TLS encryption for secure data transfer.
+- Support concurrent multi-client transfers.
+- Add Reed-Solomon or LDPC codes for burst error correction.
+- Integrate Wireshark packet captures into the dashboard for deeper protocol analysis.
