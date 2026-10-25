@@ -4,6 +4,7 @@ import StepList from "./StepList";
 
 export default function ChecksumSolver({ prefill, onPrefillUsed }) {
   const [input, setInput] = useState("11001100 10101010 11110000");
+  const [mode, setMode] = useState("bin");
   const [word, setWord] = useState("8");
   const [sol, setSol] = useState(null);
   const [err, setErr] = useState("");
@@ -16,7 +17,7 @@ export default function ChecksumSolver({ prefill, onPrefillUsed }) {
       if (prefill.word) setWord(String(prefill.word));
       onPrefillUsed?.();
       setTimeout(() => {
-        solveNumerical({ kind: "checksum", input: prefill.input || input, mode: "bin", word: parseInt(prefill.word || word) })
+        solveNumerical({ kind: "checksum", input: prefill.input || input, mode: prefill.mode || mode, word: parseInt(prefill.word || word) })
           .then((res) => setSol(res.solution))
           .catch((e) => setErr(e.message));
       }, 50);
@@ -26,7 +27,7 @@ export default function ChecksumSolver({ prefill, onPrefillUsed }) {
   async function solve() {
     setErr("");
     try {
-      const res = await solveNumerical({ kind: "checksum", input, mode: "bin", word: parseInt(word) });
+      const res = await solveNumerical({ kind: "checksum", input, mode, word: parseInt(word) });
       setSol(res.solution);
     } catch (e) {
       setErr(e.message);
@@ -37,7 +38,15 @@ export default function ChecksumSolver({ prefill, onPrefillUsed }) {
     <div>
       <div className="solver-form">
         <label>
-          Data (binary or hex)
+          Input mode
+          <select value={mode} onChange={(e) => setMode(e.target.value)}>
+            <option value="bin">Binary</option>
+            <option value="hex">Hex (0x...)</option>
+            <option value="text">Text</option>
+          </select>
+        </label>
+        <label>
+          Data
           <input value={input} onChange={(e) => setInput(e.target.value)} style={{ width: 300 }} />
         </label>
         <label>

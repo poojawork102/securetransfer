@@ -4,6 +4,7 @@ import StepList from "./StepList";
 
 export default function CrcSolver({ prefill, onPrefillUsed }) {
   const [input, setInput] = useState("11010011");
+  const [mode, setMode] = useState("bin");
   const [gen, setGen] = useState("crc3");
   const [flips, setFlips] = useState([]);
   const [sol, setSol] = useState(null);
@@ -19,7 +20,7 @@ export default function CrcSolver({ prefill, onPrefillUsed }) {
       onPrefillUsed?.();
       setTimeout(() => {
         solveNumerical({
-          kind: "crc", input: prefill.input || input, mode: "bin",
+          kind: "crc", input: prefill.input || input, mode: prefill.mode || mode,
           generator: prefill.generator || gen, flips: prefill.flips || [],
         })
           .then((res) => setSol(res.solution))
@@ -34,7 +35,7 @@ export default function CrcSolver({ prefill, onPrefillUsed }) {
       const res = await solveNumerical({
         kind: "crc",
         input,
-        mode: "bin",
+        mode,
         generator: gen,
         flips: flipOverride || flips,
       });
@@ -54,7 +55,15 @@ export default function CrcSolver({ prefill, onPrefillUsed }) {
     <div>
       <div className="solver-form">
         <label>
-          Data (binary)
+          Input mode
+          <select value={mode} onChange={(e) => setMode(e.target.value)}>
+            <option value="bin">Binary</option>
+            <option value="hex">Hex (0x...)</option>
+            <option value="text">Text</option>
+          </select>
+        </label>
+        <label>
+          Data
           <input value={input} onChange={(e) => setInput(e.target.value)} style={{ width: 250 }} />
         </label>
         <label>

@@ -39,6 +39,44 @@ function evaluateObjective(objectiveId, verified, nacked, corrected, damaged, la
   return checks.length > 0 ? checks : null;
 }
 
+function getMetrics(objectiveId, total, nacked, corrected, damaged, label) {
+  switch (objectiveId) {
+    case "O1":
+      return [
+        { value: total, label: "Chunks sent", color: "" },
+        { value: 0, label: "Errors", color: "green" },
+        { value: 0, label: "Retransmissions", color: "green" },
+      ];
+    case "O2":
+      return [
+        { value: total, label: "Chunks sent", color: "" },
+        { value: nacked, label: "Errors detected", color: nacked > 0 ? "amber" : "" },
+        { value: nacked, label: "NACKs sent", color: nacked > 0 ? "red" : "" },
+      ];
+    case "O3":
+      return [
+        { value: total, label: "Chunks sent", color: "" },
+        { value: corrected, label: "FEC corrected", color: corrected > 0 ? "blue" : "" },
+        { value: nacked, label: "Retransmissions", color: nacked === 0 ? "green" : "amber" },
+      ];
+    case "O4":
+      if (label?.includes("Checksum")) {
+        return [
+          { value: total, label: "Chunks", color: "" },
+          { value: damaged, label: "Undetected", color: damaged > 0 ? "red" : "green" },
+          { value: nacked, label: "Detected", color: nacked > 0 ? "amber" : "" },
+        ];
+      }
+      return [
+        { value: total, label: "Chunks", color: "" },
+        { value: nacked, label: "Detected", color: nacked > 0 ? "green" : "" },
+        { value: damaged, label: "Undetected", color: damaged === 0 ? "green" : "red" },
+      ];
+    default:
+      return null;
+  }
+}
+
 function truncHash(h) {
   if (!h) return "---";
   return h.slice(0, 16) + "...";
@@ -61,7 +99,7 @@ function buildSummary(verified, objective, nacked, corrected, total) {
 
     case "O2":
       if (verified && nacked > 0) {
-        return `The proxy randomly flipped bits in ${nacked} of ${total} chunks. The server's 16-bit checksum caught every one and sent a NACK. The client retransmitted those chunks until they passed. The final file matches the original.`;
+        return `The proxy corrupted some chunks by flipping random bits. The server's 16-bit Internet checksum detected ${nacked} corrupted chunk${nacked !== 1 ? "s" : ""} out of ${total} and replied with a NACK for each. The client retransmitted those chunks (stop-and-wait ARQ). The final file matches the original.`;
       }
       if (verified && nacked === 0) {
         return `The proxy was set to 30% error rate but none of the ${total} chunks happened to be corrupted this run. The file arrived intact. Try again with a larger file for a more interesting result.`;
@@ -70,7 +108,7 @@ function buildSummary(verified, objective, nacked, corrected, total) {
 
     case "O3":
       if (verified && corrected > 0) {
-        return `The proxy flipped bits in ${corrected} of ${total} chunks. Hamming(7,4) corrected every single-bit error in place -- zero retransmissions needed. The final file matches the original.`;
+        return `The proxy injected single-bit errors into some chunks. Hamming(7,4) FEC corrected ${corrected} of ${total} chunks by computing the syndrome and flipping the identified bit -- zero retransmissions needed. The final file matches the original.`;
       }
       if (verified && corrected === 0) {
         return `The proxy was set to inject errors but none of the ${total} chunks were corrupted this run. Try again with a larger file to see Hamming correction in action.`;
@@ -133,10 +171,34 @@ export default function ResultCard({ result, objective, completed, chunks, label
     : null;
   const allPass = checks ? checks.every((c) => c.pass) : null;
 
+  const metrics = objective
+    ? getMetrics(objective.id, total, nacked, corrected, damaged, label)
+    : null;
+
+  const objClass = objective ? `obj-${objective.id.toLowerCase()}` : "";
+
   return (
-    <div className={`result-card card ${verified ? "verified" : "rejected"}`}>
+    <div className={`result-card card ${verified ? "verified" : "rejected"} ${objClass}`}>
+      {objective && !label && (
+        <div className="obj-header">
+          <span className={`obj-badge ${objClass}`}>{objective.id}</span>
+          <span className="obj-header-label">{objective.label}</span>
+        </div>
+      )}
+
       {label && <p className="result-run-label">{label}</p>}
       <h2 className="result-title">{verified ? "VERIFIED" : "REJECTED"}</h2>
+
+      {metrics && total > 0 && (
+        <div className="metric-tiles">
+          {metrics.map((m, i) => (
+            <div key={i} className={`metric-tile ${m.color}`}>
+              <span className="metric-value">{m.value}</span>
+              <span className="metric-label">{m.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {summary && <p className="result-summary">{summary}</p>}
 
@@ -147,84 +209,6 @@ export default function ResultCard({ result, objective, completed, chunks, label
             : `The ${label.includes("CRC") ? "CRC32" : "16-bit checksum"} did not detect the word swap. Two 16-bit words were swapped inside some chunks, which leaves the checksum unchanged. The file failed SHA-256 verification.`}
         </p>
       )}
-
-      <div className="result-section">
-        <h4 className="result-section-title">Transfer details</h4>
-        {objective && (
-          <div className="result-row">
-            <span className="result-label">Objective</span>
-            <span>{objective.label}</span>
-          </div>
-        )}
-        {objective && (
-          <div className="result-row">
-            <span className="result-label">Expected</span>
-            <span>{objective.expected}</span>
-          </div>
-        )}
-      </div>
-
-      {total > 0 && (
-        <div className="result-section">
-          <h4 className="result-section-title">Chunk statistics</h4>
-          <div className="result-row">
-            <span className="result-label">Total sent</span>
-            <span>{total} chunks</span>
-          </div>
-          {nacked > 0 && (
-            <div className="result-row">
-              <span className="result-label">Detected bad</span>
-              <span className="result-value-warn">
-                {nacked} chunk{nacked !== 1 ? "s" : ""} failed the error check and were retransmitted
-              </span>
-            </div>
-          )}
-          {corrected > 0 && (
-            <div className="result-row">
-              <span className="result-label">Hamming fixed</span>
-              <span className="result-value-fix">
-                {corrected} chunk{corrected !== 1 ? "s" : ""} had 1-bit errors corrected without retransmission
-              </span>
-            </div>
-          )}
-          {damaged > 0 && (
-            <div className="result-row">
-              <span className="result-label">Undetected</span>
-              <span className="result-value-bad">
-                {damaged} corrupted chunk{damaged !== 1 ? "s" : ""} passed the error check (not caught)
-              </span>
-            </div>
-          )}
-          <div className="result-row">
-            <span className="result-label">Accepted</span>
-            <span>{accepted} of {total} chunks</span>
-          </div>
-        </div>
-      )}
-
-      <div className="result-section">
-        <h4 className="result-section-title">SHA-256 file verification</h4>
-        <p className="muted" style={{ fontSize: "0.8rem", marginBottom: 8 }}>
-          Before sending, the client computes the SHA-256 hash of the original file and
-          includes it in the META frame. After receiving all chunks, the server reassembles
-          the file and computes its own SHA-256 hash. These two hashes are compared below.
-          There is no external database — verification is self-contained within each transfer.
-        </p>
-        <div className="result-row">
-          <span className="result-label">Sender hash</span>
-          <span className="mono">{truncHash(result.expected)}</span>
-        </div>
-        <div className="result-row">
-          <span className="result-label">Receiver hash</span>
-          <span className="mono">{truncHash(result.got)}</span>
-        </div>
-        <div className="result-row">
-          <span className="result-label">Match</span>
-          <span className={verified ? "chip green" : "chip red"}>
-            {verified ? "Yes -- file is identical" : "No -- file is corrupted"}
-          </span>
-        </div>
-      </div>
 
       {checks && (
         <div className="result-section">
@@ -261,8 +245,31 @@ export default function ResultCard({ result, objective, completed, chunks, label
         </div>
       )}
 
+      <div className="result-section">
+        <h4 className="result-section-title">SHA-256 file verification</h4>
+        <p className="muted" style={{ fontSize: "0.8rem", marginBottom: 8 }}>
+          Before sending, the client computes the SHA-256 hash of the original file and
+          includes it in the META frame. After receiving all chunks, the server reassembles
+          the file and computes its own SHA-256 hash. These two hashes are compared below.
+        </p>
+        <div className="result-row">
+          <span className="result-label">Sender hash</span>
+          <span className="mono">{truncHash(result.expected)}</span>
+        </div>
+        <div className="result-row">
+          <span className="result-label">Receiver hash</span>
+          <span className="mono">{truncHash(result.got)}</span>
+        </div>
+        <div className="result-row">
+          <span className="result-label">Match</span>
+          <span className={verified ? "chip green" : "chip red"}>
+            {verified ? "Yes -- file is identical" : "No -- file is corrupted"}
+          </span>
+        </div>
+      </div>
+
       {explanation && (
-        <details className="result-why" open>
+        <details className="result-why">
           <summary>How this works</summary>
           <p className="muted">{explanation}</p>
         </details>

@@ -2,6 +2,48 @@
   border-left: 4px solid var(--border);
 }
 
+.result-card.verified { border-left-color: var(--green); }
+.result-card.rejected { border-left-color: var(--red); }
+
+/* per-objective top accent */
+.result-card.obj-o1 { border-top: 3px solid var(--green); }
+.result-card.obj-o2 { border-top: 3px solid var(--amber); }
+.result-card.obj-o3 { border-top: 3px solid var(--blue); }
+.result-card.obj-o4 { border-top: 3px solid var(--purple); }
+
+/* objective header */
+.obj-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.obj-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 22px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+.obj-badge.obj-o1 { background: rgba(34,197,94,0.15); color: var(--green); }
+.obj-badge.obj-o2 { background: rgba(245,158,11,0.15); color: var(--amber); }
+.obj-badge.obj-o3 { background: rgba(59,130,246,0.15); color: var(--blue); }
+.obj-badge.obj-o4 { background: rgba(168,85,247,0.15); color: var(--purple); }
+
+.obj-header-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* run label for O4 compare cards */
 .result-run-label {
   font-size: 0.75rem;
   font-weight: 600;
@@ -11,37 +53,78 @@
   margin-bottom: 4px;
 }
 
-.result-card.verified { border-left-color: var(--green); }
-.result-card.rejected { border-left-color: var(--red); }
-
+/* verdict */
 .result-title {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .verified .result-title { color: var(--green); }
 .rejected .result-title { color: var(--red); }
 
+/* metric tiles */
+.metric-tiles {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.metric-tile {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  text-align: center;
+  min-width: 0;
+}
+
+.metric-value {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-family: var(--mono);
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.metric-label {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+}
+
+.metric-tile.green .metric-value { color: var(--green); }
+.metric-tile.amber .metric-value { color: var(--amber); }
+.metric-tile.red   .metric-value { color: var(--red); }
+.metric-tile.blue  .metric-value { color: var(--blue); }
+
+/* summary */
 .result-summary {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   line-height: 1.7;
   color: var(--text);
   margin-bottom: 16px;
 }
 
+/* sections */
 .result-section {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .result-section-title {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-muted);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   padding-bottom: 4px;
   border-bottom: 1px solid var(--border);
 }
@@ -50,7 +133,7 @@
   display: flex;
   gap: 12px;
   padding: 5px 0;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
 }
 
 .result-label {
@@ -63,22 +146,23 @@
 .result-value-fix  { color: var(--blue); }
 .result-value-bad  { color: var(--red); }
 
+/* collapsible explanation */
 .result-why {
-  margin-top: 12px;
+  margin-top: 14px;
   padding-top: 12px;
   border-top: 1px solid var(--border);
 }
 
 .result-why summary {
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   font-weight: 500;
   color: var(--text-muted);
 }
 
 .result-why p {
   margin-top: 8px;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   line-height: 1.7;
 }
 
@@ -90,7 +174,7 @@
 }
 
 .chunk-map-title {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   margin-bottom: 8px;
 }
@@ -98,12 +182,12 @@
 .chunk-map-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px;
+  gap: 3px;
 }
 
 .chunk-cell {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 2px;
   display: inline-block;
 }
@@ -111,21 +195,21 @@
 .chunk-legend {
   display: flex;
   gap: 16px;
-  margin-top: 8px;
+  margin-top: 10px;
   flex-wrap: wrap;
 }
 
 .chunk-legend-item {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   font-size: 0.75rem;
   color: var(--text-muted);
 }
 
 .chunk-legend-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
   flex-shrink: 0;
 }
@@ -162,4 +246,10 @@
   outline-color: var(--accent);
   transform: scale(1.6);
   z-index: 1;
+}
+
+@media (max-width: 480px) {
+  .metric-tiles {
+    flex-direction: column;
+  }
 }

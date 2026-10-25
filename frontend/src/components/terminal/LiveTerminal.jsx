@@ -69,31 +69,31 @@ export default function LiveTerminal({ socket, activeObj, running }) {
     if (!handshakeDone) return;
 
     return socket.onTelemetry((ev) => {
-      if (ev.ev === "chunk_sent") {
-        addLine("CLIENT", `DATA  seq=${pad(ev.seq)}  len=${ev.len || 1024}B`, "send");
-      } else if (ev.ev === "corrupt") {
-        const bits = ev.bits || 1;
-        const detail = ev.byte_pos
-          ? `(bit ${ev.bit_pos || "?"} of byte ${ev.byte_pos})`
-          : "";
-        const pattern = ev.pattern === "swap" ? "swapped words" : `flipped ${bits} bit(s)`;
-        addLine("PROXY ", `chunk ${pad(ev.seq)}  ${pattern}  ${detail}`, "warn");
-      } else if (ev.ev === "chunk_ok") {
-        addLine("SERVER", `chunk ${pad(ev.seq)}  OK              -> ACK`, "ok");
-      } else if (ev.ev === "chunk_nack") {
-        const reason = (ev.reason || "checksum_fail").toUpperCase();
-        addLine("SERVER", `chunk ${pad(ev.seq)}  ${reason} -> NACK`, "nack");
-        const retry = (seqRetries.current[ev.seq] || 0) + 1;
-        seqRetries.current[ev.seq] = retry;
-        addLine("CLIENT", `DATA ${pad(ev.seq)} NACK (${(ev.reason || "checksum_fail")}) -> retransmit #${retry}`, "retry");
-      } else if (ev.ev === "chunk_fixed") {
-        const syn = ev.syndrome || "?";
-        const pos = ev.pos || "?";
-        addLine("SERVER", `chunk ${pad(ev.seq)}  Hamming FIX  syndrome=${syn} pos=${pos}`, "fix");
-        addLine("SERVER", `chunk ${pad(ev.seq)}  OK (corrected)  -> ACK`, "ok");
-      } else if (ev.ev === "timeout") {
+      if (ev.src === "client" && ev.ev === "send") {
+        if (ev.attempt > 1) {
+          addLine("CLIENT", `DATA  seq=${pad(ev.seq)}  retransmit #${ev.attempt - 1}`, "retry");
+        } else {
+          addLine("CLIENT", `DATA  seq=${pad(ev.seq)}  len=${ev.wire_len || ev.length || 256}B`, "send");
+        }
+      } else if (ev.src === "proxy" && ev.ev === "corrupt") {
+        const pattern = ev.pattern === "swap"
+          ? `swapped words at byte ${ev.byte_a} and ${ev.byte_b}`
+          : `flipped ${ev.bits || 1} bit(s)${ev.wire_byte !== undefined ? ` (byte ${ev.wire_byte}, bit ${ev.bit})` : ""}`;
+        addLine("PROXY ", `chunk ${pad(ev.seq)}  ${pattern}`, "warn");
+      } else if (ev.src === "server" && ev.ev === "chunk") {
+        if (ev.status === "ok") {
+          addLine("SERVER", `chunk ${pad(ev.seq)}  OK              -> ACK`, "ok");
+        } else if (ev.status === "corrected") {
+          const fix = ev.fixes?.[0];
+          addLine("SERVER", `chunk ${pad(ev.seq)}  Hamming FIX  syndrome=${fix?.syndrome || "?"} bit=${fix?.wire_bit || "?"}`, "fix");
+          addLine("SERVER", `chunk ${pad(ev.seq)}  OK (corrected)  -> ACK`, "ok");
+        } else if (ev.status === "crc_fail" || ev.status === "checksum_fail") {
+          const reason = ev.status === "crc_fail" ? "CRC_FAIL" : "CHECKSUM_FAIL";
+          addLine("SERVER", `chunk ${pad(ev.seq)}  ${reason} -> NACK`, "nack");
+        }
+      } else if (ev.src === "client" && ev.ev === "timeout") {
         addLine("CLIENT", `chunk ${pad(ev.seq)}  TIMEOUT -- no ACK, retransmitting`, "nack");
-      } else if (ev.ev === "result") {
+      } else if (ev.src === "server" && ev.ev === "result") {
         addLine("", "", "blank");
         addLine("CLIENT", "DONE  all chunks sent       -> server", "send");
         addLine("SERVER", `SHA-256 expected: ${ev.expected ? ev.expected.slice(0, 20) + "..." : "?"}`, "info");

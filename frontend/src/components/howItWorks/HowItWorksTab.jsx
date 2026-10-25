@@ -66,25 +66,25 @@ export default function HowItWorksTab() {
               <text key={off} x={20 + (off / 17) * 700} y="20" textAnchor="middle" fill="var(--text-muted)" fontSize="10">{off}</text>
             ))}
             {/* Field boxes */}
-            <rect x="20"  y="30" width={82}  height="40" rx="4" fill="rgba(34,211,238,0.1)" stroke="var(--accent)" strokeWidth="1" />
+            <rect x="20"  y="30" width={82}  height="40" rx="4" fill="rgba(76,141,255,0.1)" stroke="var(--accent)" strokeWidth="1" />
             <text x="61"  y="55" textAnchor="middle" fill="var(--accent)" fontSize="11" fontWeight="600">MAGIC "FT"</text>
 
-            <rect x="102" y="30" width={41}  height="40" rx="4" fill="rgba(34,211,238,0.1)" stroke="var(--accent)" strokeWidth="1" />
+            <rect x="102" y="30" width={41}  height="40" rx="4" fill="rgba(76,141,255,0.1)" stroke="var(--accent)" strokeWidth="1" />
             <text x="122" y="55" textAnchor="middle" fill="var(--text)" fontSize="10">VER</text>
 
-            <rect x="143" y="30" width={41}  height="40" rx="4" fill="rgba(34,211,238,0.1)" stroke="var(--accent)" strokeWidth="1" />
+            <rect x="143" y="30" width={41}  height="40" rx="4" fill="rgba(76,141,255,0.1)" stroke="var(--accent)" strokeWidth="1" />
             <text x="163" y="55" textAnchor="middle" fill="var(--text)" fontSize="10">TYPE</text>
 
-            <rect x="184" y="30" width={41}  height="40" rx="4" fill="rgba(34,211,238,0.1)" stroke="var(--accent)" strokeWidth="1" />
+            <rect x="184" y="30" width={41}  height="40" rx="4" fill="rgba(76,141,255,0.1)" stroke="var(--accent)" strokeWidth="1" />
             <text x="204" y="55" textAnchor="middle" fill="var(--text)" fontSize="10">FLAGS</text>
 
-            <rect x="225" y="30" width={165} height="40" rx="4" fill="rgba(34,211,238,0.1)" stroke="var(--accent)" strokeWidth="1" />
+            <rect x="225" y="30" width={165} height="40" rx="4" fill="rgba(76,141,255,0.1)" stroke="var(--accent)" strokeWidth="1" />
             <text x="307" y="55" textAnchor="middle" fill="var(--text)" fontSize="10">SEQ (4 B)</text>
 
-            <rect x="390" y="30" width={165} height="40" rx="4" fill="rgba(34,211,238,0.1)" stroke="var(--accent)" strokeWidth="1" />
+            <rect x="390" y="30" width={165} height="40" rx="4" fill="rgba(76,141,255,0.1)" stroke="var(--accent)" strokeWidth="1" />
             <text x="472" y="55" textAnchor="middle" fill="var(--text)" fontSize="10">LEN (4 B)</text>
 
-            <rect x="555" y="30" width={165} height="40" rx="4" fill="rgba(34,211,238,0.1)" stroke="var(--accent)" strokeWidth="1" />
+            <rect x="555" y="30" width={165} height="40" rx="4" fill="rgba(76,141,255,0.1)" stroke="var(--accent)" strokeWidth="1" />
             <text x="637" y="55" textAnchor="middle" fill="var(--text)" fontSize="10">CHECK (4 B)</text>
 
             {/* Payload */}
@@ -164,24 +164,24 @@ export default function HowItWorksTab() {
           <tbody>
             <tr>
               <td>16-bit checksum</td>
-              <td>Most 1-bit errors</td>
+              <td>All 1-bit errors; misses some multi-bit patterns (e.g. word swaps)</td>
               <td>No</td>
               <td>2 bytes per chunk</td>
-              <td>Default error detection</td>
+              <td>Default per-chunk error detection</td>
             </tr>
             <tr>
-              <td>CRC32</td>
-              <td>All 1, 2, 3-bit errors, most bursts</td>
+              <td>CRC-32</td>
+              <td>All 1-bit, 2-bit, and odd-count errors; all bursts up to 32 bits</td>
               <td>No</td>
               <td>4 bytes per chunk</td>
-              <td>Stronger comparison detector</td>
+              <td>Stronger detection, comparison with checksum</td>
             </tr>
             <tr>
               <td>Hamming(7,4)</td>
-              <td>1-bit errors</td>
-              <td>1-bit errors</td>
-              <td>2x payload size</td>
-              <td>Forward error correction</td>
+              <td>All 1-bit and 2-bit errors</td>
+              <td>All 1-bit errors</td>
+              <td>75% (7 bits per 4 data bits)</td>
+              <td>Forward error correction (FEC)</td>
             </tr>
             <tr>
               <td>SHA-256</td>
