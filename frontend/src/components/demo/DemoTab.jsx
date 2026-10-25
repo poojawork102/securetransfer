@@ -95,7 +95,7 @@ export default function DemoTab({ socket, onStateChange, onOpenCalculator }) {
         if (ev.status === "ok") {
           setChunks((prev) => {
             const existing = prev.find((c) => c.seq === ev.seq);
-            if (existing?.status === "damaged") return prev;
+            if (existing?.status === "damaged" || existing?.status === "nacked" || existing?.status === "corrected") return prev;
             return upsertChunk(prev, ev.seq, "accepted");
           });
         } else if (ev.status === "corrected") {

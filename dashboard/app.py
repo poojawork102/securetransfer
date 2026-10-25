@@ -42,7 +42,23 @@ _ctrl = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 LAST_SEEN = {"client": 0.0, "proxy": 0.0, "server": 0.0}
 PROXY_STATE = {}
+REQUESTED_PROXY = {}
 SESSION = []
+
+
+def wait_for_proxy(timeout=3.0):
+    want = dict(REQUESTED_PROXY)
+    if not want:
+        return True
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        st = PROXY_STATE
+        if st.get("mode") == want.get("mode") \
+           and abs(float(st.get("rate", 0)) - float(want.get("rate", 0))) < 1e-6 \
+           and str(st.get("pattern", "random")) == str(want.get("pattern", "random")):
+            return True
+        time.sleep(0.03)
+    return False
 
 
 def telemetry_listener():
@@ -110,7 +126,10 @@ def health():
 
 @app.post("/api/proxy")
 def set_proxy():
-    _ctrl.sendto(json.dumps(request.get_json(force=True)).encode(), ("127.0.0.1", config.PROXY_CONTROL_PORT))
+    payload = request.get_json(force=True)
+    REQUESTED_PROXY.clear()
+    REQUESTED_PROXY.update({k: payload[k] for k in ("mode", "rate", "pattern") if k in payload})
+    _ctrl.sendto(json.dumps(payload).encode(), ("127.0.0.1", config.PROXY_CONTROL_PORT))
     return jsonify(ok=True)
 
 
@@ -166,6 +185,7 @@ def send():
 
     def worker():
         try:
+            wait_for_proxy()
             stats = st_client.send_file(
                 path, config.HOST, int(opts.get("port", config.PROXY_PORT)),
                 chunk_size=int(opts.get("chunk", 1024)),
